@@ -51,7 +51,7 @@ export default function ContactPage() {
     // Apply sanitization to variables (just in case)
     const sanitizedNom = sanitizeInput(trimmedNom, 100);
     const sanitizedPhone = sanitizeInput(trimmedPhone, 30);
-    const sanitizedEmail = sanitizeInput(trimmedEmail, 100);
+    const sanitizedEmail = sanitizeInput(trimmedEmail, 100, true);
     const sanitizedMessage = sanitizeInput(trimmedMessage, 2000);
 
     // Proceed to submit (simulate)

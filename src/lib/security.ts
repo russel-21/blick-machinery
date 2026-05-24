@@ -3,6 +3,25 @@
  */
 
 /**
+ * Supprime tous les emojis d'une chaîne de caractères.
+ */
+export function stripEmojis(text: string): string {
+  if (!text) return '';
+  // Expression régulière pour capturer les plages d'emojis Unicode courantes et étendues
+  const emojiRegex = /[\u{1F300}-\u{1FAFF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F1E6}-\u{1F1FF}]/gu;
+  return text.replace(emojiRegex, '');
+}
+
+/**
+ * Supprime les caractères spéciaux (', ", <, >, &, `, \, {, }, [, ], $) d'un texte.
+ * L'apostrophe est également retirée selon la checklist stricte demandée.
+ */
+export function stripSpecialChars(text: string): string {
+  if (!text) return '';
+  return text.replace(/[<>&"'\`\\\{\}\[\]\$]/g, '');
+}
+
+/**
  * Valide un format d'adresse email standard.
  */
 export function isValidEmail(email: string): boolean {
@@ -29,9 +48,9 @@ export function isValidPhone(phone: string): boolean {
  */
 export function sanitizeUrl(url: string): string {
   if (!url) return '#';
-  const trimmed = url.trim();
+  let trimmed = url.trim();
 
-  // Bloquer les protocoles javascript: ou data: (sauf s'il s'agit de base64 légitime pour une image locale)
+  // Bloquer les protocoles javascript: ou data: (sauf base64 légitime pour les fichiers locaux)
   if (/^(javascript|vbscript):/i.test(trimmed)) {
     return '#';
   }
@@ -54,14 +73,26 @@ export function sanitizeUrl(url: string): string {
 }
 
 /**
- * Nettoie une chaîne de caractères et limite sa longueur.
- * Évite les spams de stockage et le bris de mise en page (layout overflow).
+ * Nettoie une chaîne de caractères, supprime les emojis et les caractères spéciaux,
+ * et limite sa longueur pour éviter les débordements de stockage ou d'interface.
  */
-export function sanitizeInput(text: string, maxLength = 2000): string {
+export function sanitizeInput(text: string, maxLength = 2000, isEmail = false): string {
   if (!text) return '';
-  const trimmed = text.trim();
-  if (trimmed.length <= maxLength) {
-    return trimmed;
+  
+  // 1. Trim des espaces blancs au début/à la fin
+  let cleaned = text.trim();
+  
+  // 2. Retrait des emojis partout
+  cleaned = stripEmojis(cleaned);
+  
+  // 3. Retrait des caractères spéciaux (sauf s'il s'agit d'une adresse email)
+  if (!isEmail) {
+    cleaned = stripSpecialChars(cleaned);
   }
-  return trimmed.substring(0, maxLength);
+  
+  // 4. Limitation stricte de longueur
+  if (cleaned.length <= maxLength) {
+    return cleaned;
+  }
+  return cleaned.substring(0, maxLength);
 }
