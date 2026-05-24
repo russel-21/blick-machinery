@@ -142,22 +142,29 @@ export const db = {
   },
 
   getPasswords: (): Record<string, string> => {
+    const strongAdminPw = 'Blick#Machinery@Admin&2026!';
     if (typeof window === 'undefined') return {
-      'admin@blick.cm': 'admin123',
+      'admin@blick.cm': strongAdminPw,
       'negotiator@blick.cm': 'nego123',
       'client@blick.cm': 'client123'
     };
     const pwJson = localStorage.getItem('blick_passwords');
     if (!pwJson) {
       const defaultPw = {
-        'admin@blick.cm': 'admin123',
+        'admin@blick.cm': strongAdminPw,
         'negotiator@blick.cm': 'nego123',
         'client@blick.cm': 'client123'
       };
       localStorage.setItem('blick_passwords', JSON.stringify(defaultPw));
       return defaultPw;
     }
-    return JSON.parse(pwJson);
+    const parsed = JSON.parse(pwJson);
+    // Migration automatique pour remplacer le mot de passe faible d'origine
+    if (parsed['admin@blick.cm'] === 'admin123') {
+      parsed['admin@blick.cm'] = strongAdminPw;
+      localStorage.setItem('blick_passwords', JSON.stringify(parsed));
+    }
+    return parsed;
   },
 
   savePasswords: (passwords: Record<string, string>) => {
