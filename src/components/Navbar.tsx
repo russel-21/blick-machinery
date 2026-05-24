@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { usePathname } from 'next/navigation';
 
 const navLinks = [
   { href: '/', label: 'ACCUEIL' },
@@ -17,6 +18,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -93,7 +95,7 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="desktop-nav">
-              {['admin', 'editor', 'negotiator'].includes(user.role) && (
+              {['admin', 'editor', 'negotiator'].includes(user.role) && pathname.startsWith('/admin') && (
                 <Link href="/admin" style={{ textDecoration: 'none' }}>
                   <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.6rem 1.1rem', border: '1px solid #f5a623', color: '#f5a623', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
                     Admin
@@ -164,7 +166,7 @@ export default function Navbar() {
           ))}
           {user ? (
             <>
-              {['admin', 'editor', 'negotiator'].includes(user.role) && (
+              {['admin', 'editor', 'negotiator'].includes(user.role) && pathname !== '/' && (
                 <Link
                   href="/admin"
                   onClick={() => setMenuOpen(false)}
