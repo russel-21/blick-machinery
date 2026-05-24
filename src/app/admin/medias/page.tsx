@@ -1,0 +1,328 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { mediaDb, MediaItem, mediaCategories } from '@/lib/media';
+import { useAuth } from '@/components/AuthProvider';
+
+import { sanitizeUrl, sanitizeInput } from '@/lib/security';
+
+export default function AdminMediaManagement() {
+  const { user } = useAuth();
+  const [items, setItems] = useState<MediaItem[]>([]);
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState<'image' | 'video'>('image');
+  const [category, setCategory] = useState('Granulation');
+  const [desc, setDesc] = useState('');
+  const [sourceType, setSourceType] = useState<'url' | 'file'>('url');
+  const [url, setUrl] = useState('');
+  const [fileBase64, setFileBase64] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    setItems(mediaDb.getItems());
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 5MB for base64 storage)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Le fichier est trop volumineux (max 5 Mo).' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFileBase64(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    const rawMediaUrl = sourceType === 'url' ? url : fileBase64;
+    
+    // Trim and validate fields
+    const trimmedTitle = title.trim();
+    const trimmedDesc = desc.trim();
+    const sanitizedMediaUrl = sanitizeUrl(rawMediaUrl);
+
+    if (!trimmedTitle || !trimmedDesc || !sanitizedMediaUrl || sanitizedMediaUrl === '#') {
+      setMessage({ type: 'error', text: 'Veuillez remplir tous les champs obligatoires avec des valeurs valides.' });
+      return;
+    }
+
+    try {
+      mediaDb.addItem({
+        title: sanitizeInput(trimmedTitle, 100),
+        type,
+        category,
+        desc: sanitizeInput(trimmedDesc, 1500),
+        url: sanitizedMediaUrl
+      });
+
+      // Reset form
+      setTitle('');
+      setDesc('');
+      setUrl('');
+      setFileBase64('');
+      const fileInput = document.getElementById('file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      setMessage({ type: 'success', text: 'Le média a été ajouté avec succès à la galerie publique !' });
+      setItems(mediaDb.getItems());
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Erreur lors de l\'ajout du média.' });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Voulez-vous vraiment supprimer ce média de la galerie publique ?')) {
+      const updated = items.filter((item) => item.id !== id);
+      mediaDb.saveItems(updated);
+      setItems(updated);
+      setMessage({ type: 'success', text: 'Le média a été supprimé.' });
+    }
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: '2.5rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0, fontFamily: "'Outfit', sans-serif" }}>
+          Gestion des <span className="text-gold-gradient">Médias</span>
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+          Importez des photos ou des vidéos (par URL ou par fichier) pour alimenter la galerie publique et permettre aux utilisateurs de liker et commenter.
+        </p>
+      </div>
+
+      {message && (
+        <div style={{
+          background: message.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+          border: '1px solid ' + (message.type === 'success' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'),
+          color: message.type === 'success' ? '#4ade80' : '#f87171',
+          padding: '1rem', borderRadius: '8px', marginBottom: '2rem',
+          fontSize: '0.9rem', fontWeight: 600, textAlign: 'center'
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Grid: Form & List */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '2rem' }} className="media-grid">
+        
+        {/* Add Form */}
+        <div className="glass-card" style={{ padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', height: 'fit-content' }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', fontFamily: "'Outfit', sans-serif" }}>
+            📥 Ajouter un <span className="text-gold-gradient">Média</span>
+          </h2>
+          
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem', letterSpacing: '0.05em' }}>
+                TYPE DE MÉDIA *
+              </label>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="radio" name="media-type" checked={type === 'image'} onChange={() => setType('image')} style={{ accentColor: '#f5a623' }} />
+                  🖼️ Image
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="radio" name="media-type" checked={type === 'video'} onChange={() => setType('video')} style={{ accentColor: '#f5a623' }} />
+                  🎥 Vidéo
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem', letterSpacing: '0.05em' }}>
+                TITRE DU MÉDIA *
+              </label>
+              <input
+                type="text"
+                placeholder="ex: Installation excavatrice Douala"
+                required
+                maxLength={100}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={{
+                  width: '100%', padding: '0.8rem', borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', outline: 'none', fontSize: '0.85rem'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem', letterSpacing: '0.05em' }}>
+                CATÉGORIE *
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{
+                  width: '100%', padding: '0.8rem', borderRadius: '8px',
+                  background: '#0d1b2a', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', outline: 'none', fontSize: '0.85rem', cursor: 'pointer'
+                }}
+              >
+                {mediaCategories.filter(c => c !== 'Tout').map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem', letterSpacing: '0.05em' }}>
+                SOURCE D&apos;IMPORTATION *
+              </label>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="radio" name="source-type" checked={sourceType === 'url'} onChange={() => setSourceType('url')} style={{ accentColor: '#f5a623' }} />
+                  🔗 Lien URL
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="radio" name="source-type" checked={sourceType === 'file'} onChange={() => setSourceType('file')} style={{ accentColor: '#f5a623' }} />
+                  📁 Fichier local
+                </label>
+              </div>
+
+              {sourceType === 'url' ? (
+                <input
+                  type="url"
+                  placeholder="https://ex: image-unsplash.jpg ou video.mp4"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  style={{
+                    width: '100%', padding: '0.8rem', borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'white', outline: 'none', fontSize: '0.85rem'
+                  }}
+                />
+              ) : (
+                <input
+                  type="file"
+                  id="file-input"
+                  accept={type === 'image' ? 'image/*' : 'video/*'}
+                  onChange={handleFileChange}
+                  style={{
+                    width: '100%', padding: '0.6rem', borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'rgba(255,255,255,0.5)', outline: 'none', fontSize: '0.85rem'
+                  }}
+                />
+              )}
+            </div>
+
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem', letterSpacing: '0.05em' }}>
+                TEXTE / DESCRIPTION *
+              </label>
+              <textarea
+                placeholder="Description détaillée de la machine, de l'usage ou du chantier..."
+                required
+                rows={4}
+                maxLength={1500}
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                style={{
+                  width: '100%', padding: '0.8rem', borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', outline: 'none', fontSize: '0.85rem', resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <button type="submit" className="btn-primary" style={{ padding: '0.8rem', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', marginTop: '0.5rem' }}>
+              🚀 Publier dans la Galerie
+            </button>
+
+          </form>
+        </div>
+
+        {/* Media List */}
+        <div className="glass-card" style={{ padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', fontFamily: "'Outfit', sans-serif" }}>
+            📊 Liste des <span className="text-gold-gradient">Médias</span> ({items.length})
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+            {items.map((item) => (
+              <div key={item.id} style={{
+                display: 'flex', gap: '1rem', padding: '1rem', borderRadius: '8px',
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+                alignItems: 'center'
+              }}>
+                {/* Media Preview */}
+                <div style={{
+                  width: '80px', height: '80px', borderRadius: '6px', overflow: 'hidden',
+                  background: '#0d1b2a', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative', flexShrink: 0
+                }}>
+                  {item.type === 'image' ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={item.url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                  )}
+                  <span style={{
+                    position: 'absolute', bottom: '2px', right: '2px', fontSize: '0.65rem',
+                    background: 'rgba(0,0,0,0.7)', padding: '1px 4px', borderRadius: '3px'
+                  }}>
+                    {item.type === 'image' ? '🖼️' : '🎥'}
+                  </span>
+                </div>
+
+                {/* Details */}
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{item.title}</h3>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'rgba(245,166,35,0.1)', color: '#f5a623' }}>
+                      {item.category}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', margin: '0.25rem 0 0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4 }}>
+                    {item.desc}
+                  </p>
+                  <div style={{ display: 'flex', gap: '1rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>
+                    <span>👍 {item.likes} Likes</span>
+                    <span>💬 {item.comments.length} Commentaires</span>
+                  </div>
+                </div>
+
+                {/* Delete action */}
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  style={{
+                    background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)',
+                    padding: '0.4rem 0.7rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+                    flexShrink: 0
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.2)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+                >
+                  🗑️ Supprimer
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      <style>{`
+        @media (max-width: 990px) {
+          .media-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
