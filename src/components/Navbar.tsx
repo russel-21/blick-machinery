@@ -95,10 +95,10 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="desktop-nav">
-              {['admin', 'editor', 'negotiator'].includes(user.role) && pathname.startsWith('/admin') && (
+              {['admin', 'editor', 'negotiator'].includes(user.role) && (
                 <Link href="/admin" style={{ textDecoration: 'none' }}>
                   <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.6rem 1.1rem', border: '1px solid #f5a623', color: '#f5a623', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
-                    Admin
+                    {pathname.startsWith('/admin') ? 'Admin' : 'Gestion'}
                   </button>
                 </Link>
               )}
@@ -166,7 +166,7 @@ export default function Navbar() {
           ))}
           {user ? (
             <>
-              {['admin', 'editor', 'negotiator'].includes(user.role) && pathname !== '/' && (
+              {['admin', 'editor', 'negotiator'].includes(user.role) && (
                 <Link
                   href="/admin"
                   onClick={() => setMenuOpen(false)}
@@ -176,7 +176,7 @@ export default function Navbar() {
                     borderBottom: '1px solid rgba(255,255,255,0.05)',
                   }}
                 >
-                  ADMINISTRATION
+                  {pathname.startsWith('/admin') ? 'ADMINISTRATION' : 'GESTION'}
                 </Link>
               )}
               <button
