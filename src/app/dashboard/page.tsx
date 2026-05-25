@@ -5,7 +5,6 @@ import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db, InstallmentPayment, Quote, SAVTicket } from '@/lib/auth';
-import { products } from '@/lib/products';
 import { sanitizeInput } from '@/lib/security';
 
 export default function ClientDashboard() {

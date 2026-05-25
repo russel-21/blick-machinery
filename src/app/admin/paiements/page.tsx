@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { db, InstallmentPayment, User, Quote } from '@/lib/auth';
 import { useAuth } from '@/components/AuthProvider';
-import { products } from '@/lib/products';
+import { productsDb } from '@/lib/products';
 
 export default function InstallmentManagement() {
   const { user } = useAuth();
@@ -12,6 +12,13 @@ export default function InstallmentManagement() {
   const [agreements, setAgreements] = useState<InstallmentPayment[]>([]);
   const [clients, setClients] = useState<User[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [productsList, setProductsList] = useState<any[]>([]);
+  const [clientSearch, setClientSearch] = useState('');
+
+  const filteredClients = clients.filter(c => 
+    c.name.toLowerCase().includes(clientSearch.toLowerCase()) || 
+    c.email.toLowerCase().includes(clientSearch.toLowerCase())
+  );
   
   // Form states
   const [selectedClient, setSelectedClient] = useState('');
@@ -40,7 +47,10 @@ export default function InstallmentManagement() {
     setAgreements(loadedPayments);
     
     const allUsers = await db.getUsers();
-    setClients(allUsers.filter((u) => u.role === 'client' || u.role === 'visitor'));
+    setClients(allUsers); // Show all registered users
+
+    const loadedProducts = await productsDb.getItems();
+    setProductsList(loadedProducts);
 
     const loadedQuotes = await db.getQuotes();
     setQuotes(loadedQuotes);
@@ -199,7 +209,7 @@ export default function InstallmentManagement() {
     const clientUser = clients.find(c => c.id === selectedClient);
     if (!clientUser) return;
 
-    const matchedProduct = products.find(p => p.id === selectedProductId);
+    const matchedProduct = productsList.find(p => p.id === selectedProductId);
     if (!matchedProduct) return;
 
     // Check sum of custom installments
@@ -351,6 +361,17 @@ export default function InstallmentManagement() {
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem' }}>
                 SÉLECTIONNER LE CLIENT *
               </label>
+              <input
+                type="text"
+                placeholder="🔍 Rechercher par nom ou email..."
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '0.65rem 0.8rem', borderRadius: '6px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', outline: 'none', fontSize: '0.8rem', marginBottom: '0.5rem'
+                }}
+              />
               <select
                 value={selectedClient}
                 onChange={(e) => handleClientChange(e.target.value)}
@@ -362,7 +383,7 @@ export default function InstallmentManagement() {
                 }}
               >
                 <option value="">-- Choisir un client inscrit --</option>
-                {clients.map((c) => (
+                {filteredClients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name} ({c.company || c.country})</option>
                 ))}
               </select>
@@ -408,7 +429,7 @@ export default function InstallmentManagement() {
                   }}
                 >
                   <option value="">-- Article --</option>
-                  {products.filter(p => p.type === productType).map((p) => (
+                  {productsList.filter(p => p.type === productType).map((p) => (
                     <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
                   ))}
                 </select>

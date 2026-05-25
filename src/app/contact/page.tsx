@@ -2,13 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import { products } from '@/lib/products';
+import { productsDb } from '@/lib/products';
 import { db } from '@/lib/auth';
-import { isValidEmail, isValidPhone, sanitizeInput } from '@/lib/security';
+import { isValidEmail, sanitizeInput } from '@/lib/security';
+
+const COUNTRIES_DATA = [
+  { name: 'Cameroun 🇨🇲', code: '+237', length: 9 },
+  { name: 'Sénégal 🇸🇳', code: '+221', length: 9 },
+  { name: 'Côte d\'Ivoire 🇨🇮', code: '+225', length: 10 },
+  { name: 'Gabon 🇬🇦', code: '+241', length: 7 },
+  { name: 'Congo 🇨🇬', code: '+242', length: 9 },
+  { name: 'Tchad 🇹🇩', code: '+235', length: 8 },
+  { name: 'RCA 🇨🇫', code: '+236', length: 8 },
+  { name: 'Guinée Équatoriale 🇬🇶', code: '+240', length: 9 },
+  { name: 'France 🇫🇷', code: '+33', length: 9 }
+];
 
 export default function ContactPage() {
-  const { submitQuote } = useAuth();
+  const { user, submitQuote } = useAuth();
   const [form, setForm] = useState({ nom: '', email: '', telephone: '', type: '' as 'machine' | 'materiel' | '', machine: '', message: '' });
+  const [countryCode, setCountryCode] = useState('+237');
+  const [productsList, setProductsList] = useState<any[]>([]);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [settings, setSettings] = useState({
@@ -23,12 +37,37 @@ export default function ContactPage() {
   });
 
   useEffect(() => {
-    async function loadSettings() {
+    async function loadData() {
       const liveSettings = await db.getSettings();
       setSettings(liveSettings);
+      
+      const list = await productsDb.getItems();
+      setProductsList(list);
     }
-    loadSettings();
+    loadData();
   }, []);
+
+  // Autofill user details if logged in
+  useEffect(() => {
+    if (user) {
+      let rawP = user.phone || '';
+      let code = '+237';
+      for (const c of COUNTRIES_DATA) {
+        if (rawP.startsWith(c.code)) {
+          code = c.code;
+          rawP = rawP.slice(c.code.length).trim();
+          break;
+        }
+      }
+      setForm(prev => ({
+        ...prev,
+        nom: user.name || '',
+        email: user.email || '',
+        telephone: rawP
+      }));
+      setCountryCode(code);
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +84,17 @@ export default function ContactPage() {
       return;
     }
 
-    if (!isValidPhone(trimmedPhone)) {
-      setError('Numéro de téléphone invalide. Veuillez saisir uniquement des chiffres, des espaces, des tirets, des parenthèses ou un + au début.');
+    // Country code validation
+    const rawDigits = trimmedPhone.replace(/\D/g, '');
+    const selectedCountry = COUNTRIES_DATA.find(c => c.code === countryCode);
+
+    if (!rawDigits) {
+      setError('Veuillez renseigner un numéro de téléphone valide.');
+      return;
+    }
+
+    if (selectedCountry && rawDigits.length !== selectedCountry.length) {
+      setError(`Le numéro de téléphone pour le ${selectedCountry.name.split(' ')[0]} doit comporter exactement ${selectedCountry.length} chiffres.`);
       return;
     }
 
@@ -56,18 +104,18 @@ export default function ContactPage() {
     }
 
     const sanitizedNom = sanitizeInput(trimmedNom, 100);
-    const sanitizedPhone = sanitizeInput(trimmedPhone, 30);
     const sanitizedEmail = sanitizeInput(trimmedEmail, 100, true);
     const sanitizedMessage = sanitizeInput(trimmedMessage, 2000);
+    const fullPhone = `${countryCode} ${rawDigits}`;
 
-    const matchedProduct = products.find((p) => p.id === form.machine);
+    const matchedProduct = productsList.find((p) => p.id === form.machine);
     const machineName = matchedProduct ? matchedProduct.name : 'Autre';
 
     try {
       await submitQuote({
         nom: sanitizedNom,
         email: sanitizedEmail,
-        telephone: sanitizedPhone,
+        telephone: fullPhone,
         type: form.type as 'machine' | 'materiel',
         machine: form.machine,
         machineName,
@@ -209,15 +257,32 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>TÉLÉPHONE *</label>
-                  <input
-                    className="form-input"
-                    type="tel"
-                    placeholder="+237 6 XX XX XX XX"
-                    required
-                    maxLength={30}
-                    value={form.telephone}
-                    onChange={e => setForm({...form, telephone: e.target.value})}
-                  />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <select
+                      value={countryCode}
+                      onChange={e => setCountryCode(e.target.value)}
+                      style={{
+                        padding: '0.8rem', borderRadius: '8px',
+                        background: '#0d1b2a', border: '1px solid rgba(245,166,35,0.25)',
+                        color: 'white', fontSize: '0.85rem', outline: 'none', cursor: 'pointer',
+                        width: '120px'
+                      }}
+                    >
+                      {COUNTRIES_DATA.map(c => (
+                        <option key={c.code} value={c.code}>{c.code} ({c.name.split(' ')[0]})</option>
+                      ))}
+                    </select>
+                    <input
+                      className="form-input"
+                      type="tel"
+                      placeholder="ex: 699952090"
+                      required
+                      maxLength={20}
+                      value={form.telephone}
+                      onChange={e => setForm({...form, telephone: e.target.value.replace(/\D/g, '')})}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -260,7 +325,7 @@ export default function ContactPage() {
                       style={{ background: '#0d1b2a', color: form.machine ? 'white' : 'rgba(255,255,255,0.3)' }}
                     >
                       <option value="">-- Sélectionner --</option>
-                      {products.filter(p => p.type === form.type).map(p => (
+                      {productsList.filter(p => p.type === form.type).map(p => (
                         <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
                       ))}
                     </select>

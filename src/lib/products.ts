@@ -9,7 +9,7 @@ export interface Product {
   featured?: boolean;
 }
 
-export const products: Product[] = [
+export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: 'mac_gran_1',
     name: 'Granuleuse Industrielle 500kg/h',
@@ -114,3 +114,49 @@ export const products: Product[] = [
     specs: ['Dureté: 48-52 HRC', 'Poids: 4.5 kg', 'Compatibilité: CAT/Komatsu', 'Fixation par clavette']
   }
 ];
+
+export const productsDb = {
+  getItems: async (): Promise<Product[]> => {
+    if (typeof window === 'undefined') return DEFAULT_PRODUCTS;
+    try {
+      const res = await fetch('/api/db?key=products', { cache: 'no-store' });
+      const data = await res.json();
+      return data.products || DEFAULT_PRODUCTS;
+    } catch {
+      return DEFAULT_PRODUCTS;
+    }
+  },
+
+  saveItems: async (items: Product[]): Promise<void> => {
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'products', data: items }),
+          cache: 'no-store'
+        });
+      } catch (err) {
+        console.error('Error saving products:', err);
+      }
+    }
+  },
+
+  addItem: async (item: Omit<Product, 'id'>): Promise<Product> => {
+    const items = await productsDb.getItems();
+    const newItem: Product = {
+      ...item,
+      id: 'mac_' + Math.random().toString(36).substr(2, 9),
+    };
+    await productsDb.saveItems([...items, newItem]);
+    return newItem;
+  },
+
+  deleteItem: async (id: string): Promise<void> => {
+    const items = await productsDb.getItems();
+    const updated = items.filter((p) => p.id !== id);
+    await productsDb.saveItems(updated);
+  }
+};
+
+export const products = DEFAULT_PRODUCTS;

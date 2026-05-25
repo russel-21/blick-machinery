@@ -5,11 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
 const menuItems = [
   { href: '/admin', label: '📊 Tableau de Bord', roles: ['admin', 'negotiator', 'editor'] },
   { href: '/admin/utilisateurs', label: '👥 Utilisateurs & Rôles', roles: ['admin'] },
   { href: '/admin/medias', label: '🖼️ Gestion Médias', roles: ['admin', 'editor'] },
+  { href: '/admin/catalogue', label: '📦 Catalogue Produits', roles: ['admin', 'editor'] },
   { href: '/admin/paiements', label: '💰 Paiements en Tranches', roles: ['admin', 'negotiator'] },
   { href: '/admin/parametres', label: '⚙️ Configuration Vitrine', roles: ['admin', 'editor'] },
 ];

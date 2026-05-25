@@ -166,7 +166,10 @@ export default function UserRoleManagement() {
                       background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '1rem', fontWeight: 700, color: '#f5a623', border: '1px solid rgba(245,166,35,0.2)'
                     }}>
-                      {u.name.charAt(0)}
+                      {u.role === 'admin' ? '👑' :
+                       u.role === 'negotiator' ? '🤝' :
+                       u.role === 'editor' ? '📝' :
+                       u.role === 'client' ? '🏢' : '👤'}
                     </div>
                     <div>
                       <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'white' }}>

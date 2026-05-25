@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, rememberMe: boolean) => Promise<boolean>;
-  loginWithGoogle: () => Promise<boolean>;
+  loginWithGoogle: (email: string, name: string) => Promise<boolean>;
   register: (data: {
     name: string;
     email: string;
@@ -64,12 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  const loginWithGoogle = async (): Promise<boolean> => {
+  const loginWithGoogle = async (email: string, name: string): Promise<boolean> => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
     
-    const email = 'google.user@gmail.com';
-    const name = 'Visiteur Google';
     const users = await db.getUsers();
     
     let matchingUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase());

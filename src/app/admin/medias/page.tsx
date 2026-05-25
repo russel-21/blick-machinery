@@ -17,6 +17,16 @@ export default function AdminMediaManagement() {
   const [fileBase64, setFileBase64] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const getYouTubeThumbnail = (mediaUrl: string): string | null => {
+    if (!mediaUrl) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = mediaUrl.match(regExp);
+    if (match && match[2].length === 11) {
+      return `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`;
+    }
+    return null;
+  };
+
   const loadMedia = async () => {
     const list = await mediaDb.getItems();
     setItems(list);
@@ -38,7 +48,42 @@ export default function AdminMediaManagement() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFileBase64(reader.result as string);
+      const result = reader.result as string;
+      if (file.type.startsWith('image/')) {
+        const img = new Image();
+        img.src = result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const max_size = 1200; // max width/height
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > max_size) {
+              height *= max_size / width;
+              width = max_size;
+            }
+          } else {
+            if (height > max_size) {
+              width *= max_size / height;
+              height = max_size;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.75);
+            setFileBase64(compressed);
+          } else {
+            setFileBase64(result);
+          }
+        };
+      } else {
+        setFileBase64(result);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -57,6 +102,14 @@ export default function AdminMediaManagement() {
     if (!trimmedTitle || !trimmedDesc || !sanitizedMediaUrl || sanitizedMediaUrl === '#') {
       setMessage({ type: 'error', text: 'Veuillez remplir tous les champs obligatoires avec des valeurs valides.' });
       return;
+    }
+
+    if (sourceType === 'url') {
+      const isHttpUrl = /^https?:\/\//i.test(sanitizedMediaUrl);
+      if (!isHttpUrl) {
+        setMessage({ type: 'error', text: 'Le lien URL doit obligatoirement commencer par http:// ou https://.' });
+        return;
+      }
     }
 
     try {
@@ -271,7 +324,14 @@ export default function AdminMediaManagement() {
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={item.url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                    <>
+                      {getYouTubeThumbnail(item.url) ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={getYouTubeThumbnail(item.url) || ''} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                      )}
+                    </>
                   )}
                   <span style={{
                     position: 'absolute', bottom: '2px', right: '2px', fontSize: '0.65rem',
