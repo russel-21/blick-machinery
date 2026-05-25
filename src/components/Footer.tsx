@@ -81,8 +81,9 @@ export default function Footer() {
 
   useEffect(() => {
     import('@/lib/auth').then(({ db }) => {
-      const saved = db.getSettings();
-      setSettings(saved);
+      db.getSettings().then((saved) => {
+        setSettings(saved);
+      });
     });
   }, []);
 

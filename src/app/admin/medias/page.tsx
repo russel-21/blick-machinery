@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { mediaDb, MediaItem, mediaCategories } from '@/lib/media';
 import { useAuth } from '@/components/AuthProvider';
-
 import { sanitizeUrl, sanitizeInput } from '@/lib/security';
 
 export default function AdminMediaManagement() {
@@ -18,8 +17,13 @@ export default function AdminMediaManagement() {
   const [fileBase64, setFileBase64] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const loadMedia = async () => {
+    const list = await mediaDb.getItems();
+    setItems(list);
+  };
+
   useEffect(() => {
-    setItems(mediaDb.getItems());
+    loadMedia();
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,7 +43,7 @@ export default function AdminMediaManagement() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
@@ -56,7 +60,7 @@ export default function AdminMediaManagement() {
     }
 
     try {
-      mediaDb.addItem({
+      await mediaDb.addItem({
         title: sanitizeInput(trimmedTitle, 100),
         type,
         category,
@@ -73,16 +77,16 @@ export default function AdminMediaManagement() {
       if (fileInput) fileInput.value = '';
 
       setMessage({ type: 'success', text: 'Le média a été ajouté avec succès à la galerie publique !' });
-      setItems(mediaDb.getItems());
+      loadMedia();
     } catch (err) {
       setMessage({ type: 'error', text: 'Erreur lors de l\'ajout du média.' });
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Voulez-vous vraiment supprimer ce média de la galerie publique ?')) {
       const updated = items.filter((item) => item.id !== id);
-      mediaDb.saveItems(updated);
+      await mediaDb.saveItems(updated);
       setItems(updated);
       setMessage({ type: 'success', text: 'Le média a été supprimé.' });
     }
@@ -195,7 +199,7 @@ export default function AdminMediaManagement() {
               {sourceType === 'url' ? (
                 <input
                   type="url"
-                  placeholder="https://ex: image-unsplash.jpg ou video.mp4"
+                  placeholder="https://ex: video-youtube.com/watch?v=xxx ou image.jpg"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   style={{
@@ -290,7 +294,7 @@ export default function AdminMediaManagement() {
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>
                     <span>👍 {item.likes} Likes</span>
-                    <span>💬 {item.comments.length} Commentaires</span>
+                    <span>💬 {item.comments ? item.comments.length : 0} Commentaires</span>
                   </div>
                 </div>
 
@@ -302,8 +306,6 @@ export default function AdminMediaManagement() {
                     padding: '0.4rem 0.7rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
                     flexShrink: 0
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.2)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
                 >
                   🗑️ Supprimer
                 </button>

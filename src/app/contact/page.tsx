@@ -1,13 +1,18 @@
 'use client';
+
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { products } from '@/lib/products';
+import { db } from '@/lib/auth';
 import { isValidEmail, isValidPhone, sanitizeInput } from '@/lib/security';
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ nom: '', email: '', telephone: '', sujet: '', machine: '', message: '' });
+  const { submitQuote } = useAuth();
+  const [form, setForm] = useState({ nom: '', email: '', telephone: '', type: '' as 'machine' | 'materiel' | '', machine: '', message: '' });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [settings, setSettings] = useState({
-    emailAdmin: "[EMAIL_ADMIN]",
+    emailAdmin: "contact@blickmachinery.cm",
     telAdmin: "+237 6 99 95 20 90",
     locationAdmin: "Stade Militi, Nditam, Douala, Cameroun",
     facebookUrl: "https://www.facebook.com/sistenar",
@@ -18,12 +23,14 @@ export default function ContactPage() {
   });
 
   useEffect(() => {
-    import('@/lib/auth').then(({ db }) => {
-      setSettings(db.getSettings());
-    });
+    async function loadSettings() {
+      const liveSettings = await db.getSettings();
+      setSettings(liveSettings);
+    }
+    loadSettings();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSent(false);
@@ -33,7 +40,7 @@ export default function ContactPage() {
     const trimmedEmail = form.email.trim();
     const trimmedMessage = form.message.trim();
 
-    if (!trimmedNom || !trimmedPhone || !trimmedMessage) {
+    if (!trimmedNom || !trimmedPhone || !trimmedMessage || !form.type || !form.machine) {
       setError('Veuillez remplir tous les champs obligatoires (*).');
       return;
     }
@@ -48,16 +55,30 @@ export default function ContactPage() {
       return;
     }
 
-    // Apply sanitization to variables (just in case)
     const sanitizedNom = sanitizeInput(trimmedNom, 100);
     const sanitizedPhone = sanitizeInput(trimmedPhone, 30);
     const sanitizedEmail = sanitizeInput(trimmedEmail, 100, true);
     const sanitizedMessage = sanitizeInput(trimmedMessage, 2000);
 
-    // Proceed to submit (simulate)
-    setSent(true);
-    setForm({ nom: '', email: '', telephone: '', sujet: '', machine: '', message: '' });
-    setTimeout(() => setSent(false), 5000);
+    const matchedProduct = products.find((p) => p.id === form.machine);
+    const machineName = matchedProduct ? matchedProduct.name : 'Autre';
+
+    try {
+      await submitQuote({
+        nom: sanitizedNom,
+        email: sanitizedEmail,
+        telephone: sanitizedPhone,
+        type: form.type as 'machine' | 'materiel',
+        machine: form.machine,
+        machineName,
+        message: sanitizedMessage
+      });
+      setSent(true);
+      setForm({ nom: '', email: '', telephone: '', type: '', machine: '', message: '' });
+      setTimeout(() => setSent(false), 5000);
+    } catch (err) {
+      setError('Une erreur est survenue lors de l\'enregistrement de votre demande.');
+    }
   };
 
   return (
@@ -149,7 +170,7 @@ export default function ContactPage() {
               Demander un Devis Gratuit
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.875rem', marginBottom: '2rem' }}>
-              Remplissez ce formulaire et nous vous contacterons rapidement.
+              Sélectionnez une machine ou du matériel réfractaire pour recevoir une offre de prix personnalisée.
             </p>
 
             {sent && (
@@ -158,7 +179,7 @@ export default function ContactPage() {
                 borderRadius: '10px', padding: '1rem', marginBottom: '1.5rem',
                 color: '#4ade80', textAlign: 'center', fontWeight: 600,
               }}>
-                ✅ Message envoyé ! Nous vous répondrons dans les 24h.
+                ✅ Devis demandé avec succès ! Notre équipe technique vous répondra sous 24 heures.
               </div>
             )}
 
@@ -179,7 +200,7 @@ export default function ContactPage() {
                   <input
                     className="form-input"
                     type="text"
-                    placeholder="Jean Dupont"
+                    placeholder="Amadou Diallo"
                     required
                     maxLength={100}
                     value={form.nom}
@@ -212,31 +233,47 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div>
-                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>TYPE DE MACHINE SOUHAITÉE</label>
-                <select
-                  className="form-input"
-                  value={form.machine}
-                  onChange={e => setForm({...form, machine: e.target.value})}
-                  style={{ background: 'rgba(255,255,255,0.05)', color: form.machine ? 'white' : 'rgba(255,255,255,0.3)' }}
-                >
-                  <option value="">Sélectionner une catégorie...</option>
-                  <option value="granuleuse">Granuleuse Industrielle</option>
-                  <option value="excavatrice">Excavatrice Hydraulique</option>
-                  <option value="camion">Camion Benne</option>
-                  <option value="concasseur">Concasseur</option>
-                  <option value="grue">Grue</option>
-                  <option value="compacteur">Compacteur</option>
-                  <option value="autre">Autre</option>
-                </select>
+              <div className="contact-form-grid" style={{ gap: '1rem' }}>
+                <div>
+                  <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>VOUS RECHERCHEZ *</label>
+                  <select
+                    className="form-input"
+                    value={form.type}
+                    onChange={e => setForm({...form, type: e.target.value as any, machine: ''})}
+                    required
+                    style={{ background: '#0d1b2a', color: form.type ? 'white' : 'rgba(255,255,255,0.3)' }}
+                  >
+                    <option value="">Sélectionner Machine/Matériel...</option>
+                    <option value="machine">🏭 MACHINE INDUSTRIELLE</option>
+                    <option value="materiel">🧱 MATÉRIEL / RÉFRACTAIRES</option>
+                  </select>
+                </div>
+
+                {form.type && (
+                  <div>
+                    <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>CHOISIR L&apos;ARTICLE *</label>
+                    <select
+                      className="form-input"
+                      value={form.machine}
+                      onChange={e => setForm({...form, machine: e.target.value})}
+                      required
+                      style={{ background: '#0d1b2a', color: form.machine ? 'white' : 'rgba(255,255,255,0.3)' }}
+                    >
+                      <option value="">-- Sélectionner --</option>
+                      {products.filter(p => p.type === form.type).map(p => (
+                        <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>VOTRE MESSAGE *</label>
+                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>MESSAGE ET BESOIN DÉTAILLÉ *</label>
                 <textarea
                   className="form-input"
                   rows={5}
-                  placeholder="Décrivez votre besoin : capacité souhaitée, usage prévu, localisation, budget approximatif..."
+                  placeholder="Veuillez préciser la quantité de machines, la capacité horaire, le budget ou tout autre besoin technique particulier..."
                   required
                   maxLength={2000}
                   value={form.message}
@@ -246,12 +283,12 @@ export default function ContactPage() {
               </div>
 
               <button type="submit" className="btn-primary" style={{ fontSize: '1rem', padding: '1rem', width: '100%' }}>
-                📋 Envoyer la Demande de Devis
+                📋 Recevoir mon devis sous 24h
               </button>
 
               <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', textAlign: 'center' }}>
                 Ou contactez-nous directement via{' '}
-                <a href="https://wa.me/237699952090" style={{ color: '#25d366', textDecoration: 'none' }}>WhatsApp</a>
+                <a href={`https://wa.me/${settings.whatsappNumber}`} style={{ color: '#25d366', textDecoration: 'none' }}>WhatsApp</a>
               </p>
             </form>
           </div>

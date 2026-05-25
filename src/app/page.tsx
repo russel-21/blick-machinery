@@ -62,7 +62,7 @@ export default function HomePage() {
 
   useEffect(() => {
     import('@/lib/auth').then(({ db }) => {
-      setSettings(db.getSettings());
+      db.getSettings().then((s) => setSettings(s));
     });
   }, []);
 

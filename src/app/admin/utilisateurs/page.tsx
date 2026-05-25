@@ -5,29 +5,31 @@ import { User, UserRole } from '@/lib/auth';
 import { useState, useEffect } from 'react';
 
 export default function UserRoleManagement() {
-  const { user, updateUserRole, adminResetPassword, refreshUserList } = useAuth();
+  const { user, updateUserRole, adminResetPassword, refreshUserList, deleteUser } = useAuth();
   const [userList, setUserList] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [resetMessage, setResetMessage] = useState<{ userName: string; email: string; pass: string } | null>(null);
 
-  useEffect(() => {
-    // Load users on mount
-    setUserList(refreshUserList());
-  }, [refreshUserList]);
-
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    // Call the auth context role updater
-    updateUserRole(userId, newRole);
-    // Reload user list to reflect changes
-    setUserList(refreshUserList());
+  const loadUsers = async () => {
+    const list = await refreshUserList();
+    setUserList(list);
   };
 
-  const handleResetPassword = (userId: string) => {
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    await updateUserRole(userId, newRole);
+    loadUsers();
+  };
+
+  const handleResetPassword = async (userId: string) => {
     const targetUser = userList.find((u) => u.id === userId);
     if (!targetUser) return;
 
     if (confirm(`Voulez-vous vraiment réinitialiser le mot de passe de ${targetUser.name} ?`)) {
-      const generatedPass = adminResetPassword(userId);
+      const generatedPass = await adminResetPassword(userId);
       setResetMessage({
         userName: targetUser.name,
         email: targetUser.email,
@@ -35,6 +37,16 @@ export default function UserRoleManagement() {
       });
       // Clear message after 15 seconds
       setTimeout(() => setResetMessage(null), 15000);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const targetUser = userList.find((u) => u.id === userId);
+    if (!targetUser) return;
+
+    if (confirm(`Voulez-vous vraiment SUPPRIMER DEFINITIVEMENT l'utilisateur ${targetUser.name} (${targetUser.email}) ?Cette action est irréversible.`)) {
+      await deleteUser(userId);
+      loadUsers();
     }
   };
 
@@ -52,7 +64,7 @@ export default function UserRoleManagement() {
           Utilisateurs & <span className="text-gold-gradient">Rôles</span>
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-          Recherchez un utilisateur par nom et attribuez-lui des droits administratifs ou réinitialisez son accès.
+          Recherchez un utilisateur par nom, attribuez-lui des droits administratifs ou supprimez définitivement son compte.
         </p>
       </div>
 
@@ -207,25 +219,42 @@ export default function UserRoleManagement() {
 
                 {/* Actions */}
                 <td style={{ padding: '1.25rem 0.75rem', textAlign: 'right' }}>
-                  <button
-                    onClick={() => handleResetPassword(u.id)}
-                    disabled={u.isGoogleUser} // Google OAuth users don't have passwords to reset
-                    style={{
-                      background: 'rgba(239,68,68,0.1)',
-                      color: u.isGoogleUser ? 'rgba(255,255,255,0.2)' : '#f87171',
-                      border: '1px solid ' + (u.isGoogleUser ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.25)'),
-                      padding: '0.4rem 0.8rem',
-                      borderRadius: '6px',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      cursor: u.isGoogleUser ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => { if(!u.isGoogleUser) e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; }}
-                    onMouseLeave={(e) => { if(!u.isGoogleUser) e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
-                  >
-                    🔑 Reset Pwd
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => handleResetPassword(u.id)}
+                      disabled={u.isGoogleUser} // Google OAuth users don't have passwords to reset
+                      style={{
+                        background: 'rgba(245,166,35,0.1)',
+                        color: u.isGoogleUser ? 'rgba(255,255,255,0.2)' : '#f5a623',
+                        border: '1px solid ' + (u.isGoogleUser ? 'rgba(255,255,255,0.05)' : 'rgba(245,166,35,0.25)'),
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        cursor: u.isGoogleUser ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      🔑 Reset Pwd
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(u.id)}
+                      disabled={u.id === user?.id} // Cannot delete oneself
+                      style={{
+                        background: u.id === user?.id ? 'rgba(255,255,255,0.02)' : 'rgba(239,68,68,0.1)',
+                        color: u.id === user?.id ? 'rgba(255,255,255,0.2)' : '#f87171',
+                        border: '1px solid ' + (u.id === user?.id ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.25)'),
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        cursor: u.id === user?.id ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  </div>
                 </td>
 
               </tr>

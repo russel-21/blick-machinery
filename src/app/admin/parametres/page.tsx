@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/auth';
-
 import { sanitizeUrl, sanitizeInput, isValidEmail, isValidPhone } from '@/lib/security';
 
 export default function AdminSettings() {
@@ -22,11 +21,14 @@ export default function AdminSettings() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    // Load current settings
-    setSettings(db.getSettings());
+    async function loadSettings() {
+      const liveSettings = await db.getSettings();
+      setSettings(liveSettings);
+    }
+    loadSettings();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
@@ -59,7 +61,7 @@ export default function AdminSettings() {
         locationAdmin: sanitizeInput(settings.locationAdmin.trim(), 200)
       };
 
-      db.saveSettings(sanitizedSettings);
+      await db.saveSettings(sanitizedSettings);
       setSettings(sanitizedSettings); // update state with clean data
       setMessage({ type: 'success', text: 'Paramètres enregistrés avec succès ! La vitrine publique a été mise à jour.' });
     } catch (err) {

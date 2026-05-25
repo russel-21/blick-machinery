@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { mediaDb, MediaItem, mediaCategories } from '@/lib/media';
 import { useAuth } from '@/components/AuthProvider';
-
 import { sanitizeInput } from '@/lib/security';
 
 export default function GaleriePage() {
@@ -16,15 +15,58 @@ export default function GaleriePage() {
   const [commentName, setCommentName] = useState('');
   const [commentText, setCommentText] = useState('');
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [visitorId, setVisitorId] = useState('');
+
+  // Helper to extract YouTube video ID and construct embed URL
+  const getYouTubeEmbedUrl = (url: string): string | null => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}?autoplay=1&mute=1`;
+    }
+    return null;
+  };
+
+  // Helper to get YouTube High-Quality Thumbnail
+  const getYouTubeThumbnail = (url: string): string | null => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      return `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`;
+    }
+    return null;
+  };
+
+  const loadMedia = async () => {
+    const mediaItems = await mediaDb.getItems();
+    setItems(mediaItems);
+    
+    // Auto open shared item if ?item=xxx is present in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const itemId = urlParams.get('item');
+    if (itemId) {
+      const match = mediaItems.find((i) => i.id === itemId);
+      if (match) setActiveModalItem(match);
+    }
+  };
 
   useEffect(() => {
-    // Load from local storage db
-    setItems(mediaDb.getItems());
+    // Generate or fetch visitor ID for unique likes
+    if (typeof window !== 'undefined') {
+      let stored = localStorage.getItem('blick_visitor_id');
+      if (!stored) {
+        stored = 'vis_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('blick_visitor_id', stored);
+      }
+      setVisitorId(stored);
+    }
+    loadMedia();
   }, []);
 
-  // Update modal item in real-time when underlying data changes
-  const updateModalState = (itemId: string) => {
-    const updatedItems = mediaDb.getItems();
+  const updateModalState = async (itemId: string) => {
+    const updatedItems = await mediaDb.getItems();
     setItems(updatedItems);
     if (activeModalItem && activeModalItem.id === itemId) {
       const match = updatedItems.find((i) => i.id === itemId);
@@ -32,23 +74,24 @@ export default function GaleriePage() {
     }
   };
 
-  const handleLike = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening modal when clicking like on card
-    mediaDb.likeItem(id);
+  const handleLike = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const userKey = user ? user.id : visitorId;
+    if (!userKey) return;
+    await mediaDb.likeItem(id, userKey);
     updateModalState(id);
   };
 
-  const handleCommentSubmit = (e: React.FormEvent, itemId: string) => {
+  const handleCommentSubmit = async (e: React.FormEvent, itemId: string) => {
     e.preventDefault();
     const trimmedText = commentText.trim();
     if (!trimmedText) return;
 
-    // Use logged in user name if available
     const rawAuthor = user ? user.name : commentName || 'Visiteur Anonyme';
     const cleanAuthor = sanitizeInput(rawAuthor.trim(), 50);
     const cleanText = sanitizeInput(trimmedText, 500);
 
-    mediaDb.addComment(itemId, cleanAuthor, cleanText);
+    await mediaDb.addComment(itemId, cleanAuthor, cleanText);
     
     setCommentText('');
     if (!user) setCommentName('');
@@ -58,17 +101,17 @@ export default function GaleriePage() {
 
   const handleShare = (itemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Simulate share URL copying
     const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/galerie?item=${itemId}` : '';
     navigator.clipboard.writeText(shareUrl);
     setShareSuccess(true);
     setTimeout(() => setShareSuccess(false), 3000);
   };
 
-  // Filter items based on selected category
-  const filteredItems = selectedCat === 'Tout'
+  const selectedCatItems = selectedCat === 'Tout'
     ? items
     : items.filter((item) => item.category === selectedCat);
+
+  const currentUserKey = user ? user.id : visitorId;
 
   return (
     <>
@@ -125,7 +168,7 @@ export default function GaleriePage() {
       {/* Gallery grid */}
       <section style={{ padding: '4rem 1.5rem', background: '#0d1b2a', minHeight: '50vh' }}>
         <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
-          {filteredItems.length === 0 ? (
+          {selectedCatItems.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: '4rem 0' }}>
               <span style={{ fontSize: '3rem' }}>📭</span>
               <h3 style={{ margin: '1rem 0 0 0' }}>Aucun média disponible dans cette catégorie</h3>
@@ -137,85 +180,99 @@ export default function GaleriePage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
               gap: '1.75rem',
             }}>
-              {filteredItems.map((item, i) => (
-                <div 
-                  key={item.id} 
-                  onClick={() => setActiveModalItem(item)}
-                  className="card-hover glass-card" 
-                  style={{
-                    borderRadius: '16px', overflow: 'hidden', cursor: 'pointer',
-                    border: '1px solid rgba(245,166,35,0.1)',
-                    display: 'flex', flexDirection: 'column'
-                  }}
-                >
-                  {/* Media Visual Area */}
-                  <div style={{
-                    minHeight: '220px',
-                    height: '220px',
-                    position: 'relative',
-                    background: '#0a1628',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden'
-                  }}>
-                    {item.type === 'image' ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={item.url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'all 0.5s ease' }} className="gallery-img" />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                        <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted preload="metadata" />
-                        <div style={{
-                          position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
+              {selectedCatItems.map((item) => {
+                const isLiked = item.likedBy && currentUserKey ? item.likedBy.includes(currentUserKey) : false;
+                const ytThumb = getYouTubeThumbnail(item.url);
+                return (
+                  <div 
+                    key={item.id} 
+                    onClick={() => setActiveModalItem(item)}
+                    className="card-hover glass-card" 
+                    style={{
+                      borderRadius: '16px', overflow: 'hidden', cursor: 'pointer',
+                      border: '1px solid rgba(245,166,35,0.1)',
+                      display: 'flex', flexDirection: 'column'
+                    }}
+                  >
+                    {/* Media Visual Area */}
+                    <div style={{
+                      minHeight: '220px',
+                      height: '220px',
+                      position: 'relative',
+                      background: '#0a1628',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden'
+                    }}>
+                      {item.type === 'image' ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={item.url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'all 0.5s ease' }} className="gallery-img" />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                          {ytThumb ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={ytThumb} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted preload="metadata" />
+                          )}
                           <div style={{
-                            width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(245,166,35,0.85)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: '#0d1b2a',
-                            paddingLeft: '3px', boxShadow: '0 4px 15px rgba(245,166,35,0.4)'
+                            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
                           }}>
-                            ▶
+                            <div style={{
+                              width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(245,166,35,0.85)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: '#0d1b2a',
+                              paddingLeft: '3px', boxShadow: '0 4px 15px rgba(245,166,35,0.4)'
+                            }}>
+                              ▶
+                            </div>
                           </div>
                         </div>
+                      )}
+                      
+                      {/* Category overlay */}
+                      <div style={{ position: 'absolute', top: '1rem', left: '1rem' }}>
+                        <span className="product-badge" style={{ fontSize: '0.7rem', fontWeight: 700 }}>{item.category}</span>
                       </div>
-                    )}
-                    
-                    {/* Category overlay */}
-                    <div style={{ position: 'absolute', top: '1rem', left: '1rem' }}>
-                      <span className="product-badge" style={{ fontSize: '0.7rem', fontWeight: 700 }}>{item.category}</span>
-                    </div>
-                  </div>
-
-                  {/* Info and Actions Preview */}
-                  <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                      <h3 style={{ color: 'white', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.5rem', lineHeight: 1.3 }}>{item.title}</h3>
-                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', lineHeight: 1.5, margin: '0 0 1.25rem 0', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {item.desc}
-                      </p>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <button 
-                        onClick={(e) => handleLike(item.id, e)}
-                        style={{
-                          background: 'none', border: 'none', color: '#f5a623', cursor: 'pointer',
-                          fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
-                        }}
-                      >
-                        <span>👍</span> {item.likes} Likes
-                      </button>
-                      <button 
-                        onClick={(e) => handleShare(item.id, e)}
-                        style={{
-                          background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
-                          fontWeight: 600, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
-                        }}
-                      >
-                        <span>🔗</span> Partager
-                      </button>
+                    {/* Info and Actions Preview */}
+                    <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <h3 style={{ color: 'white', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.5rem', lineHeight: 1.3 }}>{item.title}</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', lineHeight: 1.5, margin: '0 0 1.25rem 0', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {item.desc}
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button 
+                            onClick={(e) => handleLike(item.id, e)}
+                            style={{
+                              background: 'none', border: 'none', color: isLiked ? '#f5a623' : 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                              fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', outline: 'none'
+                            }}
+                          >
+                            <span>{isLiked ? '❤️' : '🤍'}</span> {item.likes || 0}
+                          </button>
+                          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <span>💬</span> {item.comments ? item.comments.length : 0}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={(e) => handleShare(item.id, e)}
+                          style={{
+                            background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
+                            fontWeight: 600, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', outline: 'none'
+                          }}
+                        >
+                          <span>🔗</span> Partager
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -231,7 +288,7 @@ export default function GaleriePage() {
             <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '1.75rem', fontSize: '0.92rem', maxWidth: '600px', margin: '0 auto 1.75rem' }}>
               Soumettez vos photos ou vidéos de chantiers en Afrique. Notre équipe technique publiera vos réalisations directement sur cette page.
             </p>
-            <a href="mailto:[EMAIL_ADMIN]" style={{ textDecoration: 'none' }}>
+            <a href="mailto:contact@blickmachinery.cm" style={{ textDecoration: 'none' }}>
               <button className="btn-outline" style={{ padding: '0.8rem 1.8rem' }}>✉️ Nous envoyer vos médias</button>
             </a>
           </div>
@@ -278,7 +335,22 @@ export default function GaleriePage() {
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={activeModalItem.url} alt={activeModalItem.title} style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '550px' }} />
               ) : (
-                <video src={activeModalItem.url} style={{ width: '100%', height: '100%', maxHeight: '550px' }} controls autoPlay muted />
+                <>
+                  {getYouTubeEmbedUrl(activeModalItem.url) ? (
+                    <iframe
+                      width="100%"
+                      height="380px"
+                      src={getYouTubeEmbedUrl(activeModalItem.url) || ''}
+                      title={activeModalItem.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{ width: '100%', border: 'none' }}
+                    />
+                  ) : (
+                    <video src={activeModalItem.url} style={{ width: '100%', height: '100%', maxHeight: '550px' }} controls autoPlay muted />
+                  )}
+                </>
               )}
             </div>
 
@@ -310,17 +382,23 @@ export default function GaleriePage() {
 
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <button 
-                    onClick={(e) => handleLike(activeModalItem.id, e)}
-                    style={{
-                      background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)',
-                      color: '#f5a623', padding: '0.6rem 1.2rem', borderRadius: '8px',
-                      cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
-                      display: 'flex', alignItems: 'center', gap: '0.4rem'
-                    }}
-                  >
-                    👍 Aimer ({activeModalItem.likes})
-                  </button>
+                  {(() => {
+                    const isModalLiked = activeModalItem.likedBy && currentUserKey ? activeModalItem.likedBy.includes(currentUserKey) : false;
+                    return (
+                      <button 
+                        onClick={(e) => handleLike(activeModalItem.id, e)}
+                        style={{
+                          background: isModalLiked ? 'rgba(245,166,35,0.2)' : 'rgba(245,166,35,0.1)',
+                          border: '1px solid rgba(245,166,35,0.3)',
+                          color: '#f5a623', padding: '0.6rem 1.2rem', borderRadius: '8px',
+                          cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+                          display: 'flex', alignItems: 'center', gap: '0.4rem', outline: 'none'
+                        }}
+                      >
+                        {isModalLiked ? '❤️' : '🤍'} Aimer ({activeModalItem.likes || 0})
+                      </button>
+                    );
+                  })()}
                   
                   <button 
                     onClick={(e) => handleShare(activeModalItem.id, e)}
@@ -328,7 +406,7 @@ export default function GaleriePage() {
                       background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)',
                       color: 'rgba(255,255,255,0.7)', padding: '0.6rem 1.2rem', borderRadius: '8px',
                       cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
-                      display: 'flex', alignItems: 'center', gap: '0.4rem'
+                      display: 'flex', alignItems: 'center', gap: '0.4rem', outline: 'none'
                     }}
                   >
                     🔗 Copier le Lien
@@ -341,7 +419,7 @@ export default function GaleriePage() {
                     color: '#4ade80', fontSize: '0.78rem', padding: '0.5rem', borderRadius: '6px',
                     textAlign: 'center', marginBottom: '1.25rem', fontWeight: 600
                   }}>
-                    📋 Lien copié dans le presse-papier !
+                    📋 Lien de partage copié dans le presse-papier !
                   </div>
                 )}
 
@@ -349,12 +427,12 @@ export default function GaleriePage() {
                 <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
                   <span>💬 Commentaires</span>
                   <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
-                    {activeModalItem.comments.length}
+                    {activeModalItem.comments ? activeModalItem.comments.length : 0}
                   </span>
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '2rem' }}>
-                  {activeModalItem.comments.length === 0 ? (
+                  {!activeModalItem.comments || activeModalItem.comments.length === 0 ? (
                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', fontStyle: 'italic' }}>
                       Aucun commentaire pour le moment. Soyez le premier à commenter !
                     </p>

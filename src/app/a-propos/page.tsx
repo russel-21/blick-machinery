@@ -29,7 +29,7 @@ export default function AProposPage() {
 
   useEffect(() => {
     import('@/lib/auth').then(({ db }) => {
-      setSettings(db.getSettings());
+      db.getSettings().then((s) => setSettings(s));
     });
   }, []);
 

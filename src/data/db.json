@@ -1,0 +1,178 @@
+{
+  "users": [
+    {
+      "id": "usr_admin",
+      "name": "Admin Blick",
+      "email": "admin@blick.cm",
+      "phone": "+237 6 99 95 20 90",
+      "country": "Cameroun",
+      "company": "Blick Machinery",
+      "role": "admin",
+      "createdAt": "2026-05-01T12:00:00Z"
+    },
+    {
+      "id": "usr_nego",
+      "name": "Samuel Eto'o",
+      "email": "negotiator@blick.cm",
+      "phone": "+237 6 77 77 77 77",
+      "country": "Cameroun",
+      "company": "Blick Machinery",
+      "role": "negotiator",
+      "createdAt": "2026-05-10T14:30:00Z"
+    },
+    {
+      "id": "usr_client",
+      "name": "Amadou Diallo",
+      "email": "client@blick.cm",
+      "phone": "+221 77 123 45 67",
+      "country": "Sénégal",
+      "company": "Diallo & Fils BTP",
+      "role": "client",
+      "createdAt": "2026-05-15T09:15:00Z"
+    }
+  ],
+  "passwords": {
+    "admin@blick.cm": "Blick#Machinery@Admin&2026!",
+    "negotiator@blick.cm": "nego123",
+    "client@blick.cm": "client123"
+  },
+  "payments": [
+    {
+      "id": "pay_1",
+      "machineId": "mac_gran_1",
+      "machineName": "Granuleuse Industrielle 500kg/h (Amadou Diallo)",
+      "totalAmount": 45000,
+      "paidAmount": 15000,
+      "negotiatorName": "Samuel Eto'o",
+      "status": "partially_paid",
+      "clientId": "usr_client",
+      "depositAmount": 5000,
+      "depositStatus": "paid",
+      "installments": [
+        { "id": "inst_1_1", "amount": 10000, "dueDate": "2026-05-20", "paidDate": "2026-05-20", "status": "paid" },
+        { "id": "inst_1_2", "amount": 15000, "dueDate": "2026-06-20", "status": "pending" },
+        { "id": "inst_1_3", "amount": 15000, "dueDate": "2026-07-20", "status": "pending" }
+      ]
+    }
+  ],
+  "settings": {
+    "aboutText": "Blick Machinery Cameroon SARL est une structure leader dans la distribution de machines industrielles et d'équipements lourds partout en Afrique. En tant que filiale officielle de Blick Refractory Technology (Chine), nous combinons l'excellence de la technologie industrielle de pointe avec un service local d'une réactivité sans faille.",
+    "aboutMission": "Fournir des équipements industriels de qualité supérieure, fiables et à des prix compétitifs pour accompagner le développement économique de l'Afrique.",
+    "aboutVision": "Devenir le partenaire numéro un pour l'équipement industriel lourd en Afrique de l'Ouest et Centrale.",
+    "facebookUrl": "https://www.facebook.com/sistenar",
+    "whatsappNumber": "+237699952090",
+    "tiktokUrl": "#",
+    "instagramUrl": "#",
+    "youtubeUrl": "#",
+    "emailAdmin": "contact@blickmachinery.cm",
+    "telAdmin": "+237 6 99 95 20 90",
+    "locationAdmin": "Stade Militi, Nditam, Douala, Cameroun"
+  },
+  "media": [
+    {
+      "id": "med_1",
+      "title": "Granuleuse Blick-1200 en production",
+      "type": "image",
+      "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80",
+      "category": "Granulation",
+      "desc": "Notre granuleuse industrielle phare en plein régime chez notre partenaire à Douala. Capacité de production élevée de granulés plastiques homogènes.",
+      "likedBy": [],
+      "likes": 24,
+      "comments": [
+        { "id": "c_1", "userName": "Amadou Diallo", "text": "Machine très robuste, installation rapide par les techniciens.", "createdAt": "2026-05-18T10:00:00Z" }
+      ],
+      "createdAt": "2026-05-10T08:00:00Z"
+    },
+    {
+      "id": "med_2",
+      "title": "Présentation Excavatrice Lourde Blick HD",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "category": "Terrassement",
+      "desc": "Démonstration de l'excavatrice hydraulique Blick sur un chantier de terrassement. Maniabilité et puissance exceptionnelles.",
+      "likedBy": [],
+      "likes": 42,
+      "comments": [
+        { "id": "c_2", "userName": "Direction Générale", "text": "Disponible en stock à Douala pour démonstration physique.", "createdAt": "2026-05-12T14:00:00Z" }
+      ],
+      "createdAt": "2026-05-11T09:00:00Z"
+    },
+    {
+      "id": "med_3",
+      "title": "Livraison de 3 Camions Benne à Yaoundé",
+      "type": "image",
+      "url": "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80",
+      "category": "Logistique",
+      "desc": "Livraison réussie de notre flotte de camions benne lourds Blick pour un grand projet routier en Afrique Centrale.",
+      "likedBy": [],
+      "likes": 18,
+      "comments": [],
+      "createdAt": "2026-05-12T11:30:00Z"
+    },
+    {
+      "id": "med_4",
+      "title": "Concasseur de Pierres Mobile en action",
+      "type": "image",
+      "url": "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?auto=format&fit=crop&w=800&q=80",
+      "category": "Carrière",
+      "desc": "Broyeur mobile Blick assurant une production continue de granulats sur site de construction.",
+      "likedBy": [],
+      "likes": 15,
+      "comments": [],
+      "createdAt": "2026-05-14T15:00:00Z"
+    },
+    {
+      "id": "med_5",
+      "title": "Installation d'un sécheur rotatif",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+      "category": "Installation",
+      "desc": "Vidéo montrant le processus d'assemblage et de soudage de structures industrielles lourdes par nos techniciens qualifiés.",
+      "likedBy": [],
+      "likes": 31,
+      "comments": [
+        { "id": "c_3", "userName": "Marc Ngoue", "text": "Superbe boulot d'installation !", "createdAt": "2026-05-15T18:00:00Z" }
+      ],
+      "createdAt": "2026-05-15T10:00:00Z"
+    },
+    {
+      "id": "med_6",
+      "title": "Briques Réfractaires pour Four Métallurgique",
+      "type": "image",
+      "url": "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&w=800&q=80",
+      "category": "Réfractaire",
+      "desc": "Nos briques réfractaires issues de Blick Refractory Technology (Chine) capables de supporter des températures supérieures à 1600°C.",
+      "likedBy": [],
+      "likes": 9,
+      "comments": [],
+      "createdAt": "2026-05-16T16:00:00Z"
+    }
+  ],
+  "quotes": [
+    {
+      "id": "q_1",
+      "nom": "Amadou Diallo",
+      "email": "client@blick.cm",
+      "telephone": "+221 77 123 45 67",
+      "type": "machine",
+      "machine": "mac_gran_1",
+      "machineName": "Granuleuse Industrielle 500kg/h",
+      "message": "Besoin de commander une granuleuse industrielle de 500kg/h pour livraison au port de Dakar. Budget approx 45000$.",
+      "status": "pending",
+      "createdAt": "2026-05-15T09:30:00Z"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "tk_1",
+      "clientId": "usr_client",
+      "clientName": "Amadou Diallo",
+      "machineName": "Granuleuse Industrielle 500kg/h",
+      "type": "maintenance",
+      "urgency": "medium",
+      "desc": "Nous avons besoin d'une assistance technique pour calibrer la double vis de la granuleuse après 200 heures d'utilisation.",
+      "status": "technician_assigned",
+      "createdAt": "2026-05-20T10:15:00Z"
+    }
+  ]
+}

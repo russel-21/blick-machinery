@@ -1,30 +1,61 @@
 'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { usePathname } from 'next/navigation';
 
-const navLinks = [
-  { href: '/', label: 'ACCUEIL' },
-  { href: '/catalogue', label: 'CATALOGUE' },
-  { href: '/galerie', label: 'GALERIE' },
-  { href: '/a-propos', label: 'À PROPOS' },
-  { href: '/contact', label: 'CONTACT' },
-  { href: '/faq', label: 'FAQ' },
-];
+const navLinks = {
+  FR: [
+    { href: '/', label: 'ACCUEIL' },
+    { href: '/catalogue', label: 'CATALOGUE' },
+    { href: '/galerie', label: 'GALERIE' },
+    { href: '/a-propos', label: 'À PROPOS' },
+    { href: '/contact', label: 'CONTACT' },
+    { href: '/faq', label: 'FAQ' },
+  ],
+  EN: [
+    { href: '/', label: 'HOME' },
+    { href: '/catalogue', label: 'CATALOGUE' },
+    { href: '/galerie', label: 'GALLERY' },
+    { href: '/a-propos', label: 'ABOUT US' },
+    { href: '/contact', label: 'CONTACT' },
+    { href: '/faq', label: 'FAQ' },
+  ]
+};
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lang, setLang] = useState<'FR' | 'EN'>('FR');
   const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
+    
+    // Load language from storage
+    if (typeof window !== 'undefined') {
+      const storedLang = localStorage.getItem('blick_lang') as 'FR' | 'EN';
+      if (storedLang) setLang(storedLang);
+    }
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLangToggle = () => {
+    const nextLang = lang === 'FR' ? 'EN' : 'FR';
+    setLang(nextLang);
+    localStorage.setItem('blick_lang', nextLang);
+    // Reload or fire custom event if other pages need to translate
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('langChange', { detail: nextLang }));
+    }
+  };
+
+  const currentLinks = navLinks[lang];
 
   return (
     <nav
@@ -61,9 +92,9 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop nav links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }} className="desktop-nav">
-          {navLinks.map((link) => (
+          {currentLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -91,14 +122,42 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* CTA Button & Auth */}
+        {/* CTA Button, Language Switcher & Auth */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          
+          {/* Language Switch Button */}
+          <button
+            onClick={handleLangToggle}
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(245,166,35,0.2)',
+              color: '#f5a623',
+              borderRadius: '6px',
+              padding: '0.4rem 0.75rem',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            🌐 {lang}
+          </button>
+
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="desktop-nav">
               {['admin', 'editor', 'negotiator'].includes(user.role) && (
                 <Link href="/admin" style={{ textDecoration: 'none' }}>
                   <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.6rem 1.1rem', border: '1px solid #f5a623', color: '#f5a623', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
-                    {pathname.startsWith('/admin') ? 'Admin' : 'Gestion'}
+                    {pathname.startsWith('/admin') ? (lang === 'FR' ? 'Console Admin' : 'Admin Console') : (lang === 'FR' ? 'Gestion' : 'Dashboard')}
+                  </button>
+                </Link>
+              )}
+              {user.role === 'client' && (
+                <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                  <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.6rem 1.1rem', border: '1px solid #f5a623', color: '#f5a623', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
+                    {lang === 'FR' ? '📈 Espace B2B' : '📈 B2B Space'}
                   </button>
                 </Link>
               )}
@@ -107,24 +166,24 @@ export default function Navbar() {
                 className="btn-secondary" 
                 style={{ fontSize: '0.78rem', padding: '0.6rem 1.1rem', border: '1px solid rgba(255,255,255,0.25)', color: 'white', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}
               >
-                Déconnexion
+                {lang === 'FR' ? 'Déconnexion' : 'Logout'}
               </button>
             </div>
           ) : (
             <Link href="/auth/login" style={{ textDecoration: 'none' }} className="desktop-nav">
               <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.6rem 1.1rem', border: '1px solid rgba(255,255,255,0.25)', color: 'white', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
-                Connexion
+                {lang === 'FR' ? 'Connexion' : 'Login'}
               </button>
             </Link>
           )}
 
           <Link href="/contact" style={{ textDecoration: 'none' }} className="cta-button-header">
             <button className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.6rem 1.4rem' }}>
-              Demander un Devis
+              {lang === 'FR' ? 'Demander un Devis' : 'Get a Quote'}
             </button>
           </Link>
 
-          {/* Hamburger */}
+          {/* Hamburger Menu Icon */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
@@ -143,13 +202,13 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile drop down menu */}
       {menuOpen && (
         <div style={{
           background: 'rgba(13,27,42,0.98)', borderTop: '1px solid rgba(245,166,35,0.1)',
           padding: '1rem 1.5rem',
         }}>
-          {navLinks.map((link) => (
+          {currentLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -179,6 +238,19 @@ export default function Navbar() {
                   {pathname.startsWith('/admin') ? 'ADMINISTRATION' : 'GESTION'}
                 </Link>
               )}
+              {user.role === 'client' && (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: 'block', color: '#f5a623', textDecoration: 'none',
+                    fontSize: '0.9rem', fontWeight: 600, padding: '0.75rem 0',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  }}
+                >
+                  {lang === 'FR' ? '📈 ESPACE B2B' : '📈 B2B SPACE'}
+                </Link>
+              )}
               <button
                 onClick={() => {
                   logout();
@@ -190,7 +262,7 @@ export default function Navbar() {
                   borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer'
                 }}
               >
-                SE DÉCONNECTER
+                {lang === 'FR' ? 'SE DÉCONNECTER' : 'LOGOUT'}
               </button>
             </>
           ) : (
@@ -203,12 +275,14 @@ export default function Navbar() {
                 borderBottom: '1px solid rgba(255,255,255,0.05)',
               }}
             >
-              CONNEXION / INSCRIPTION
+              {lang === 'FR' ? 'CONNEXION / INSCRIPTION' : 'LOGIN / REGISTER'}
             </Link>
           )}
 
           <Link href="/contact" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', display: 'block', marginTop: '1rem' }}>
-            <button className="btn-primary" style={{ width: '100%' }}>Demander un Devis</button>
+            <button className="btn-primary" style={{ width: '100%' }}>
+              {lang === 'FR' ? 'Demander un Devis' : 'Get a Quote'}
+            </button>
           </Link>
         </div>
       )}

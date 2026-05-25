@@ -22,6 +22,9 @@ export interface InstallmentPayment {
   paidAmount: number;
   negotiatorName: string;
   status: 'pending' | 'partially_paid' | 'paid';
+  clientId?: string;
+  depositAmount?: number;
+  depositStatus?: 'pending' | 'paid';
   installments: {
     id: string;
     amount: number;
@@ -31,7 +34,31 @@ export interface InstallmentPayment {
   }[];
 }
 
-// Simulated User database in localStorage
+export interface Quote {
+  id: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  type: 'machine' | 'materiel';
+  machine: string; // Product ID
+  machineName: string;
+  message: string;
+  status: 'pending' | 'processing' | 'approved' | 'expired';
+  createdAt: string;
+}
+
+export interface SAVTicket {
+  id: string;
+  clientId: string;
+  clientName: string;
+  machineName: string;
+  type: 'panne' | 'maintenance' | 'installation' | 'pieces';
+  urgency: 'low' | 'medium' | 'high';
+  desc: string;
+  status: 'open' | 'technician_assigned' | 'resolved';
+  createdAt: string;
+}
+
 const DEFAULT_USERS: User[] = [
   {
     id: 'usr_admin',
@@ -42,77 +69,72 @@ const DEFAULT_USERS: User[] = [
     company: 'Blick Machinery',
     role: 'admin',
     createdAt: '2026-05-01T12:00:00Z'
-  },
-  {
-    id: 'usr_nego',
-    name: 'Samuel Eto\'o',
-    email: 'negotiator@blick.cm',
-    phone: '+237 6 77 77 77 77',
-    country: 'Cameroun',
-    company: 'Blick Machinery',
-    role: 'negotiator',
-    createdAt: '2026-05-10T14:30:00Z'
-  },
-  {
-    id: 'usr_client',
-    name: 'Amadou Diallo',
-    email: 'client@blick.cm',
-    phone: '+221 77 123 45 67',
-    country: 'Sénégal',
-    company: 'Diallo & Fils BTP',
-    role: 'client',
-    createdAt: '2026-05-15T09:15:00Z'
   }
 ];
 
-const DEFAULT_PAYMENTS: InstallmentPayment[] = [
-  {
-    id: 'pay_1',
-    machineId: '1',
-    machineName: 'Granuleuse Industrielle Blick-1200',
-    totalAmount: 45000,
-    paidAmount: 15000,
-    negotiatorName: 'Samuel Eto\'o',
-    status: 'partially_paid',
-    installments: [
-      { id: 'inst_1_1', amount: 15000, dueDate: '2026-05-20', paidDate: '2026-05-20', status: 'paid' },
-      { id: 'inst_1_2', amount: 15000, dueDate: '2026-06-20', status: 'pending' },
-      { id: 'inst_1_3', amount: 15000, dueDate: '2026-07-20', status: 'pending' }
-    ]
-  }
-];
+const DEFAULT_SETTINGS = {
+  aboutText: "Blick Machinery Cameroon SARL est une structure leader dans la distribution de machines industrielles et d'équipements lourds partout en Afrique. En tant que filiale officielle de Blick Refractory Technology (Chine), nous combinons l'excellence de la technologie industrielle de pointe avec un service local d'une réactivité sans faille.",
+  aboutMission: "Fournir des équipements industriels de qualité supérieure, fiables et à des prix compétitifs pour accompagner le développement économique de l'Afrique.",
+  aboutVision: "Devenir le partenaire numéro un pour l'équipement industriel lourd en Afrique de l'Ouest et Centrale.",
+  facebookUrl: "https://www.facebook.com/sistenar",
+  whatsappNumber: "+237699952090",
+  tiktokUrl: "#",
+  instagramUrl: "#",
+  youtubeUrl: "#",
+  emailAdmin: "contact@blickmachinery.cm",
+  telAdmin: "+237 6 99 95 20 90",
+  locationAdmin: "Stade Militi, Nditam, Douala, Cameroun"
+};
 
-// Helper to interact with LocalStorage safe for SSR
+// Helper to interact with Server Database safe for SSR
 export const db = {
-  getUsers: (): User[] => {
+  getUsers: async (): Promise<User[]> => {
     if (typeof window === 'undefined') return DEFAULT_USERS;
-    const usersJson = localStorage.getItem('blick_users');
-    if (!usersJson) {
-      localStorage.setItem('blick_users', JSON.stringify(DEFAULT_USERS));
+    try {
+      const res = await fetch('/api/db?key=users');
+      const data = await res.json();
+      return data.users || DEFAULT_USERS;
+    } catch {
       return DEFAULT_USERS;
     }
-    return JSON.parse(usersJson);
   },
 
-  saveUsers: (users: User[]) => {
+  saveUsers: async (users: User[]): Promise<void> => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('blick_users', JSON.stringify(users));
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'users', data: users })
+        });
+      } catch (err) {
+        console.error('Error saving users:', err);
+      }
     }
   },
 
-  getPayments: (): InstallmentPayment[] => {
-    if (typeof window === 'undefined') return DEFAULT_PAYMENTS;
-    const payJson = localStorage.getItem('blick_payments');
-    if (!payJson) {
-      localStorage.setItem('blick_payments', JSON.stringify(DEFAULT_PAYMENTS));
-      return DEFAULT_PAYMENTS;
+  getPayments: async (): Promise<InstallmentPayment[]> => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const res = await fetch('/api/db?key=payments');
+      const data = await res.json();
+      return data.payments || [];
+    } catch {
+      return [];
     }
-    return JSON.parse(payJson);
   },
 
-  savePayments: (payments: InstallmentPayment[]) => {
+  savePayments: async (payments: InstallmentPayment[]): Promise<void> => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('blick_payments', JSON.stringify(payments));
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'payments', data: payments })
+        });
+      } catch (err) {
+        console.error('Error saving payments:', err);
+      }
     }
   },
 
@@ -141,64 +163,119 @@ export const db = {
     }
   },
 
-  getPasswords: (): Record<string, string> => {
-    const strongAdminPw = 'Blick#Machinery@Admin&2026!';
-    if (typeof window === 'undefined') return {
-      'admin@blick.cm': strongAdminPw,
-      'negotiator@blick.cm': 'nego123',
-      'client@blick.cm': 'client123'
-    };
-    const pwJson = localStorage.getItem('blick_passwords');
-    if (!pwJson) {
-      const defaultPw = {
-        'admin@blick.cm': strongAdminPw,
-        'negotiator@blick.cm': 'nego123',
-        'client@blick.cm': 'client123'
-      };
-      localStorage.setItem('blick_passwords', JSON.stringify(defaultPw));
+  getPasswords: async (): Promise<Record<string, string>> => {
+    const defaultPw = { 'admin@blick.cm': 'Blick#Machinery@Admin&2026!' };
+    if (typeof window === 'undefined') return defaultPw;
+    try {
+      const res = await fetch('/api/db?key=passwords');
+      const data = await res.json();
+      return data.passwords || defaultPw;
+    } catch {
       return defaultPw;
     }
-    const parsed = JSON.parse(pwJson);
-    // Migration automatique pour remplacer le mot de passe faible d'origine
-    if (parsed['admin@blick.cm'] === 'admin123') {
-      parsed['admin@blick.cm'] = strongAdminPw;
-      localStorage.setItem('blick_passwords', JSON.stringify(parsed));
-    }
-    return parsed;
   },
 
-  savePasswords: (passwords: Record<string, string>) => {
+  savePasswords: async (passwords: Record<string, string>): Promise<void> => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('blick_passwords', JSON.stringify(passwords));
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'passwords', data: passwords })
+        });
+      } catch (err) {
+        console.error('Error saving passwords:', err);
+      }
     }
   },
 
-  getSettings: () => {
-    const defaultSettings = {
-      aboutText: "Blick Machinery Cameroon SARL est une structure leader dans la distribution de machines industrielles et d'équipements lourds partout en Afrique. En tant que filiale officielle de Blick Refractory Technology (Chine), nous combinons l'excellence de la technologie industrielle de pointe avec un service local d'une réactivité sans faille.",
-      aboutMission: "Fournir des équipements industriels de qualité supérieure, fiables et à des prix compétitifs pour accompagner le développement économique de l'Afrique.",
-      aboutVision: "Devenir le partenaire numéro un pour l'équipement industriel lourd en Afrique de l'Ouest et Centrale.",
-      facebookUrl: "https://www.facebook.com/sistenar",
-      whatsappNumber: "+237699952090",
-      tiktokUrl: "#",
-      instagramUrl: "#",
-      youtubeUrl: "#",
-      emailAdmin: "contact@blickmachinery.cm",
-      telAdmin: "+237 6 99 95 20 90",
-      locationAdmin: "Stade Militi, Nditam, Douala, Cameroun"
-    };
-    if (typeof window === 'undefined') return defaultSettings;
-    const settingsJson = localStorage.getItem('blick_settings');
-    if (!settingsJson) {
-      localStorage.setItem('blick_settings', JSON.stringify(defaultSettings));
-      return defaultSettings;
+  getSettings: async (): Promise<any> => {
+    if (typeof window === 'undefined') return DEFAULT_SETTINGS;
+    try {
+      const res = await fetch('/api/db?key=settings');
+      const data = await res.json();
+      return data.settings || DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
     }
-    return JSON.parse(settingsJson);
   },
 
-  saveSettings: (settings: any) => {
+  saveSettings: async (settings: any): Promise<void> => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('blick_settings', JSON.stringify(settings));
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'settings', data: settings })
+        });
+      } catch (err) {
+        console.error('Error saving settings:', err);
+      }
+    }
+  },
+
+  getQuotes: async (): Promise<Quote[]> => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const res = await fetch('/api/db?key=quotes');
+      const data = await res.json();
+      return data.quotes || [];
+    } catch {
+      return [];
+    }
+  },
+
+  saveQuotes: async (quotes: Quote[]): Promise<void> => {
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'quotes', data: quotes })
+        });
+      } catch (err) {
+        console.error('Error saving quotes:', err);
+      }
+    }
+  },
+
+  getTickets: async (): Promise<SAVTicket[]> => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const res = await fetch('/api/db?key=tickets');
+      const data = await res.json();
+      return data.tickets || [];
+    } catch {
+      return [];
+    }
+  },
+
+  saveTickets: async (tickets: SAVTicket[]): Promise<void> => {
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'tickets', data: tickets })
+        });
+      } catch (err) {
+        console.error('Error saving SAV tickets:', err);
+      }
+    }
+  },
+
+  cleanFictionalData: async (): Promise<any> => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cleanFictional' })
+      });
+      return await res.json();
+    } catch (err) {
+      console.error('Error cleaning demo data:', err);
+      return null;
     }
   }
 };

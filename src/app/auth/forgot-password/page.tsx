@@ -68,9 +68,9 @@ export default function ForgotPasswordPage() {
 
     try {
       // Actually update the password in the mock database
-      const passwords = db.getPasswords();
+      const passwords = await db.getPasswords();
       passwords[email.trim().toLowerCase()] = newPassword;
-      db.savePasswords(passwords);
+      await db.savePasswords(passwords);
 
       setSuccess('Votre mot de passe a été chiffré (AES-256/bcrypt) et réinitialisé avec succès !');
       setNewPassword('');

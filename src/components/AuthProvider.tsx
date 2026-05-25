@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, db, UserRole } from '@/lib/auth';
+import { User, db, UserRole, Quote, SAVTicket } from '@/lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -19,9 +19,14 @@ interface AuthContextType {
   }) => Promise<boolean>;
   logout: () => void;
   resetPassword: (email: string) => Promise<boolean>;
-  updateUserRole: (userId: string, role: UserRole) => void;
-  adminResetPassword: (userId: string) => string; // returns new generated password
-  refreshUserList: () => User[];
+  updateUserRole: (userId: string, role: UserRole) => Promise<void>;
+  adminResetPassword: (userId: string) => Promise<string>; // returns new generated password
+  refreshUserList: () => Promise<User[]>;
+  deleteUser: (userId: string) => Promise<void>;
+  submitQuote: (quote: Omit<Quote, 'id' | 'status' | 'createdAt'>) => Promise<void>;
+  submitTicket: (ticket: Omit<SAVTicket, 'id' | 'status' | 'createdAt'>) => Promise<void>;
+  updateQuoteStatus: (quoteId: string, status: Quote['status']) => Promise<void>;
+  updateTicketStatus: (ticketId: string, status: SAVTicket['status']) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial load
+    // Initial load of session
     const session = db.getSession();
     if (session) {
       setUser(session);
@@ -41,11 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, rememberMe: boolean): Promise<boolean> => {
     setLoading(true);
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     
-    const users = db.getUsers();
-    const passwords = db.getPasswords();
+    const users = await db.getUsers();
+    const passwords = await db.getPasswords();
     
     const matchingUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     
@@ -62,27 +66,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (): Promise<boolean> => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800)); // Simulate Google popup & redirect
+    await new Promise((resolve) => setTimeout(resolve, 500));
     
-    // Simulate successful Google login
     const email = 'google.user@gmail.com';
     const name = 'Visiteur Google';
-    const users = db.getUsers();
+    const users = await db.getUsers();
     
     let matchingUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     
     if (!matchingUser) {
-      // Create new user if not exist
       matchingUser = {
         id: 'usr_' + Math.random().toString(36).substr(2, 9),
         name,
         email,
-        role: 'visitor',
+        role: 'client', // Default to client so they can access B2B features
         isGoogleUser: true,
         createdAt: new Date().toISOString()
       };
       const updatedUsers = [...users, matchingUser];
-      db.saveUsers(updatedUsers);
+      await db.saveUsers(updatedUsers);
     }
     
     setUser(matchingUser);
@@ -101,9 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     rememberMe: boolean;
   }): Promise<boolean> => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 400));
     
-    const users = db.getUsers();
+    const users = await db.getUsers();
     
     if (users.some((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
       setLoading(false);
@@ -117,19 +119,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone: data.phone,
       country: data.country || 'Cameroun',
       company: data.company,
-      role: 'visitor', // Default role is visitor
+      role: 'client', // Standard registered users are clients
       createdAt: new Date().toISOString()
     };
 
-    // Save user
     const updatedUsers = [...users, newUser];
-    db.saveUsers(updatedUsers);
+    await db.saveUsers(updatedUsers);
 
-    // Save password
     if (data.password) {
-      const passwords = db.getPasswords();
+      const passwords = await db.getPasswords();
       passwords[data.email] = data.password;
-      db.savePasswords(passwords);
+      await db.savePasswords(passwords);
     }
 
     setUser(newUser);
@@ -144,18 +144,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string): Promise<boolean> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const users = db.getUsers();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const users = await db.getUsers();
     const exists = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
-    return exists; // Returns true if reset instructions can be "sent" to email
+    return exists;
   };
 
-  const updateUserRole = (userId: string, role: UserRole) => {
-    const users = db.getUsers();
+  const updateUserRole = async (userId: string, role: UserRole) => {
+    const users = await db.getUsers();
     const updatedUsers = users.map((u) => {
       if (u.id === userId) {
         const updated = { ...u, role };
-        // If the updated user is the currently logged in user, update the active session
         if (user && user.id === userId) {
           setUser(updated);
           db.setSession(updated);
@@ -164,23 +163,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return u;
     });
-    db.saveUsers(updatedUsers);
+    await db.saveUsers(updatedUsers);
   };
 
-  const adminResetPassword = (userId: string): string => {
-    const users = db.getUsers();
+  const adminResetPassword = async (userId: string): Promise<string> => {
+    const users = await db.getUsers();
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) return '';
 
     const newPassword = Math.random().toString(36).slice(-8); // Generate random 8 char password
-    const passwords = db.getPasswords();
+    const passwords = await db.getPasswords();
     passwords[targetUser.email] = newPassword;
-    db.savePasswords(passwords);
+    await db.savePasswords(passwords);
     return newPassword;
   };
 
-  const refreshUserList = (): User[] => {
-    return db.getUsers();
+  const refreshUserList = async (): Promise<User[]> => {
+    return await db.getUsers();
+  };
+
+  const deleteUser = async (userId: string): Promise<void> => {
+    const users = await db.getUsers();
+    const passwords = await db.getPasswords();
+    
+    const targetUser = users.find((u) => u.id === userId);
+    if (!targetUser) return;
+    
+    // Filter out target user
+    const updatedUsers = users.filter((u) => u.id !== userId);
+    await db.saveUsers(updatedUsers);
+    
+    // Delete password record
+    delete passwords[targetUser.email];
+    await db.savePasswords(passwords);
+  };
+
+  const submitQuote = async (quote: Omit<Quote, 'id' | 'status' | 'createdAt'>): Promise<void> => {
+    const quotes = await db.getQuotes();
+    const newQuote: Quote = {
+      ...quote,
+      id: 'q_' + Math.random().toString(36).substr(2, 9),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    await db.saveQuotes([newQuote, ...quotes]);
+  };
+
+  const submitTicket = async (ticket: Omit<SAVTicket, 'id' | 'status' | 'createdAt'>): Promise<void> => {
+    const tickets = await db.getTickets();
+    const newTicket: SAVTicket = {
+      ...ticket,
+      id: 'tk_' + Math.random().toString(36).substr(2, 9),
+      status: 'open',
+      createdAt: new Date().toISOString()
+    };
+    await db.saveTickets([newTicket, ...tickets]);
+  };
+
+  const updateQuoteStatus = async (quoteId: string, status: Quote['status']): Promise<void> => {
+    const quotes = await db.getQuotes();
+    const updated = quotes.map((q) => {
+      if (q.id === quoteId) {
+        return { ...q, status };
+      }
+      return q;
+    });
+    await db.saveQuotes(updated);
+  };
+
+  const updateTicketStatus = async (ticketId: string, status: SAVTicket['status']): Promise<void> => {
+    const tickets = await db.getTickets();
+    const updated = tickets.map((t) => {
+      if (t.id === ticketId) {
+        return { ...t, status };
+      }
+      return t;
+    });
+    await db.saveTickets(updated);
   };
 
   return (
@@ -195,7 +254,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updateUserRole,
         adminResetPassword,
-        refreshUserList
+        refreshUserList,
+        deleteUser,
+        submitQuote,
+        submitTicket,
+        updateQuoteStatus,
+        updateTicketStatus
       }}
     >
       {children}
