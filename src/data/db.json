@@ -27,7 +27,7 @@
       "phone": "+221 77 123 45 67",
       "country": "Sénégal",
       "company": "Diallo & Fils BTP",
-      "role": "client",
+      "role": "editor",
       "createdAt": "2026-05-15T09:15:00Z"
     }
   ],
@@ -49,9 +49,25 @@
       "depositAmount": 5000,
       "depositStatus": "paid",
       "installments": [
-        { "id": "inst_1_1", "amount": 10000, "dueDate": "2026-05-20", "paidDate": "2026-05-20", "status": "paid" },
-        { "id": "inst_1_2", "amount": 15000, "dueDate": "2026-06-20", "status": "pending" },
-        { "id": "inst_1_3", "amount": 15000, "dueDate": "2026-07-20", "status": "pending" }
+        {
+          "id": "inst_1_1",
+          "amount": 10000,
+          "dueDate": "2026-05-20",
+          "paidDate": "2026-05-20",
+          "status": "paid"
+        },
+        {
+          "id": "inst_1_2",
+          "amount": 15000,
+          "dueDate": "2026-06-20",
+          "status": "pending"
+        },
+        {
+          "id": "inst_1_3",
+          "amount": 15000,
+          "dueDate": "2026-07-20",
+          "status": "pending"
+        }
       ]
     }
   ],
@@ -79,7 +95,12 @@
       "likedBy": [],
       "likes": 24,
       "comments": [
-        { "id": "c_1", "userName": "Amadou Diallo", "text": "Machine très robuste, installation rapide par les techniciens.", "createdAt": "2026-05-18T10:00:00Z" }
+        {
+          "id": "c_1",
+          "userName": "Amadou Diallo",
+          "text": "Machine très robuste, installation rapide par les techniciens.",
+          "createdAt": "2026-05-18T10:00:00Z"
+        }
       ],
       "createdAt": "2026-05-10T08:00:00Z"
     },
@@ -93,7 +114,12 @@
       "likedBy": [],
       "likes": 42,
       "comments": [
-        { "id": "c_2", "userName": "Direction Générale", "text": "Disponible en stock à Douala pour démonstration physique.", "createdAt": "2026-05-12T14:00:00Z" }
+        {
+          "id": "c_2",
+          "userName": "Direction Générale",
+          "text": "Disponible en stock à Douala pour démonstration physique.",
+          "createdAt": "2026-05-12T14:00:00Z"
+        }
       ],
       "createdAt": "2026-05-11T09:00:00Z"
     },
@@ -131,7 +157,12 @@
       "likedBy": [],
       "likes": 31,
       "comments": [
-        { "id": "c_3", "userName": "Marc Ngoue", "text": "Superbe boulot d'installation !", "createdAt": "2026-05-15T18:00:00Z" }
+        {
+          "id": "c_3",
+          "userName": "Marc Ngoue",
+          "text": "Superbe boulot d'installation !",
+          "createdAt": "2026-05-15T18:00:00Z"
+        }
       ],
       "createdAt": "2026-05-15T10:00:00Z"
     },
@@ -183,7 +214,12 @@
       "category": "Granulation",
       "emoji": "🏭",
       "desc": "Machine de granulation haute capacité, idéale pour la production de granulés plastiques, engrais et aliments.",
-      "specs": ["Capacité: 500 kg/h", "Puissance: 22 kW", "Poids: 850 kg", "Certification: CE"],
+      "specs": [
+        "Capacité: 500 kg/h",
+        "Puissance: 22 kW",
+        "Poids: 850 kg",
+        "Certification: CE"
+      ],
       "featured": true
     },
     {
@@ -193,7 +229,12 @@
       "category": "Terrassement",
       "emoji": "🚜",
       "desc": "Excavatrice lourde pour travaux de terrassement, mines et chantiers de construction.",
-      "specs": ["Capacité: 20 tonnes", "Profondeur: 6.5m", "Puissance: 108 kW", "Garantie: 1 an"],
+      "specs": [
+        "Capacité: 20 tonnes",
+        "Profondeur: 6.5m",
+        "Puissance: 108 kW",
+        "Garantie: 1 an"
+      ],
       "featured": true
     },
     {
@@ -203,7 +244,12 @@
       "category": "Transport",
       "emoji": "🚛",
       "desc": "Camion benne robuste pour transport de matériaux lourds sur chantiers et mines.",
-      "specs": ["Charge utile: 30T", "Moteur: 380 CV", "Volume benne: 18m³", "Transmission: Automatique"],
+      "specs": [
+        "Charge utile: 30T",
+        "Moteur: 380 CV",
+        "Volume benne: 18m³",
+        "Transmission: Automatique"
+      ],
       "featured": true
     },
     {
@@ -213,7 +259,12 @@
       "category": "Carrière",
       "emoji": "⛏️",
       "desc": "Concasseur à mâchoires pour carrières et mines, production de granulats.",
-      "specs": ["Capacité: 150 T/h", "Taille max entrée: 500mm", "Puissance: 75 kW", "Sortie: 10-90mm"]
+      "specs": [
+        "Capacité: 150 T/h",
+        "Taille max entrée: 500mm",
+        "Puissance: 75 kW",
+        "Sortie: 10-90mm"
+      ]
     },
     {
       "id": "mac_leva_1",
@@ -222,7 +273,12 @@
       "category": "Levage",
       "emoji": "🏗️",
       "desc": "Grue mobile à flèche télescopique pour chantiers de construction et industrie.",
-      "specs": ["Capacité: 50T", "Hauteur max: 42m", "Rayon: 34m", "Moteur: 240 kW"]
+      "specs": [
+        "Capacité: 50T",
+        "Hauteur max: 42m",
+        "Rayon: 34m",
+        "Moteur: 240 kW"
+      ]
     },
     {
       "id": "mac_btp_1",
@@ -231,7 +287,12 @@
       "category": "BTP",
       "emoji": "🛤️",
       "desc": "Rouleau compresseur vibrant pour compactage de sols, routes et parkings.",
-      "specs": ["Poids: 12 tonnes", "Amplitude: 1.8mm", "Fréquence: 28 Hz", "Largeur: 2.13m"]
+      "specs": [
+        "Poids: 12 tonnes",
+        "Amplitude: 1.8mm",
+        "Fréquence: 28 Hz",
+        "Largeur: 2.13m"
+      ]
     },
     {
       "id": "mac_gran_2",
@@ -240,7 +301,12 @@
       "category": "Granulation",
       "emoji": "⚙️",
       "desc": "Granuleuse à double vis extrudeuse pour matières thermoplastiques et recyclage.",
-      "specs": ["Capacité: 300 kg/h", "Longueur vis: 32D", "Puissance: 37 kW", "Température max: 350°C"]
+      "specs": [
+        "Capacité: 300 kg/h",
+        "Longueur vis: 32D",
+        "Puissance: 37 kW",
+        "Température max: 350°C"
+      ]
     },
     {
       "id": "mac_terra_2",
@@ -249,7 +315,12 @@
       "category": "Terrassement",
       "emoji": "🚧",
       "desc": "Chargeuse compacte polyvalente pour chantiers urbains et carrières.",
-      "specs": ["Capacité godet: 3m³", "Force d'arrachement: 170 kN", "Puissance: 162 kW", "Poids: 17T"]
+      "specs": [
+        "Capacité godet: 3m³",
+        "Force d'arrachement: 170 kN",
+        "Puissance: 162 kW",
+        "Poids: 17T"
+      ]
     },
     {
       "id": "mat_ref_1",
@@ -258,7 +329,12 @@
       "category": "Réfractaire",
       "emoji": "🧱",
       "desc": "Briques réfractaires haute température pour fours industriels, cimenteries et fonderies.",
-      "specs": ["T° max: 1700°C", "Densité: 2.4 g/cm³", "Format: 230x114x64mm", "Certifiées ISO 9001"],
+      "specs": [
+        "T° max: 1700°C",
+        "Densité: 2.4 g/cm³",
+        "Format: 230x114x64mm",
+        "Certifiées ISO 9001"
+      ],
       "featured": true
     },
     {
@@ -268,7 +344,12 @@
       "category": "Convoyeur",
       "emoji": "⛓️",
       "desc": "Bande de convoyeur en caoutchouc renforcé pour le transport de granulats ou minerais.",
-      "specs": ["Largeur: 800mm", "Longueur: sur mesure", "Résistance: 400 N/mm", "Ignifuge: Oui"]
+      "specs": [
+        "Largeur: 800mm",
+        "Longueur: sur mesure",
+        "Résistance: 400 N/mm",
+        "Ignifuge: Oui"
+      ]
     },
     {
       "id": "mat_piece_1",
@@ -277,7 +358,12 @@
       "category": "Pièces détachées",
       "emoji": "⚙️",
       "desc": "Pièces d'usure en acier allié forgé haute résistance pour godets d'excavatrices.",
-      "specs": ["Dureté: 48-52 HRC", "Poids: 4.5 kg", "Compatibilité: CAT/Komatsu", "Fixation par clavette"]
+      "specs": [
+        "Dureté: 48-52 HRC",
+        "Poids: 4.5 kg",
+        "Compatibilité: CAT/Komatsu",
+        "Fixation par clavette"
+      ]
     }
   ]
 }
