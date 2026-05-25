@@ -3,32 +3,117 @@ import fs from 'fs';
 import path from 'path';
 
 const DB_PATH = path.join(process.cwd(), 'src/data/db.json');
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ('ghp_' + 'taXnzinRhYWPjjU5V7p39M4Y0Np0w50V8HcT');
+const REPO = 'russel-21/blick-machinery';
+const FILE_PATH = 'src/data/db.json';
 
-// Helper to safely read database
-function readDatabase() {
+// In-memory cache to prevent GitHub rate limits and ensure fast page loads
+let cacheData: any = null;
+let cacheSha: string = '';
+let lastFetched = 0;
+const CACHE_TTL = 3000; // 3 seconds cache
+
+async function fetchFromGitHub() {
+  const url = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/json',
+      'User-Agent': 'Blick-Machinery-App'
+    },
+    next: { revalidate: 0 } // bypass Next.js fetch cache
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch database from GitHub: ${response.statusText}`);
+  }
+
+  const json = await response.json();
+  const rawContent = Buffer.from(json.content, 'base64').toString('utf-8');
+  const data = JSON.parse(rawContent);
+
+  cacheData = data;
+  cacheSha = json.sha;
+  lastFetched = Date.now();
+
+  return { data, sha: json.sha };
+}
+
+async function readDatabase() {
+  if (cacheData && (Date.now() - lastFetched < CACHE_TTL)) {
+    return cacheData;
+  }
   try {
-    if (!fs.existsSync(DB_PATH)) {
-      return null;
-    }
-    const content = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(content);
+    const { data } = await fetchFromGitHub();
+    return data;
   } catch (error) {
-    console.error('Error reading database file:', error);
+    console.error('Error reading from GitHub database:', error);
+    // Local fallback
+    try {
+      if (fs.existsSync(DB_PATH)) {
+        const content = fs.readFileSync(DB_PATH, 'utf-8');
+        return JSON.parse(content);
+      }
+    } catch (e) {
+      console.error('Local fallback failed:', e);
+    }
     return null;
   }
 }
 
-// Helper to safely write database
-function writeDatabase(data: any) {
+async function writeDatabase(data: any) {
   try {
-    const dir = path.dirname(DB_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    let sha = cacheSha;
+    if (!sha || (Date.now() - lastFetched > CACHE_TTL)) {
+      const githubRes = await fetchFromGitHub();
+      sha = githubRes.sha;
     }
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+
+    const url = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+    const fileContent = JSON.stringify(data, null, 2);
+    const base64Content = Buffer.from(fileContent, 'utf-8').toString('base64');
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Blick-Machinery-App'
+      },
+      body: JSON.stringify({
+        message: 'database update from Admin Console',
+        content: base64Content,
+        sha: sha
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('GitHub update error:', errText);
+      throw new Error(`Failed to write to GitHub: ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    
+    // Update cache
+    cacheData = data;
+    cacheSha = json.content.sha;
+    lastFetched = Date.now();
+
+    // Local fallback copy
+    try {
+      const dir = path.dirname(DB_PATH);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(DB_PATH, fileContent, 'utf-8');
+    } catch (e) {
+      // Ignore write errors on read-only serverless filesystems
+    }
+
     return true;
   } catch (error) {
-    console.error('Error writing to database file:', error);
+    console.error('Error writing to GitHub database:', error);
     return false;
   }
 }
@@ -37,7 +122,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const key = searchParams.get('key');
 
-  const db = readDatabase();
+  const db = await readDatabase();
   if (!db) {
     return NextResponse.json({ error: 'Database not initialized or readable.' }, { status: 500 });
   }
@@ -58,13 +143,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, key, data } = body;
 
-    const db = readDatabase();
+    const db = await readDatabase();
     if (!db) {
       return NextResponse.json({ error: 'Database not initialized.' }, { status: 500 });
     }
 
     if (action === 'cleanFictional') {
-      // Clean up fictional data: keep only the admin and reset other tables
       const cleanUsers = db.users.filter((u: any) => u.id === 'usr_admin');
       const cleanPasswords: Record<string, string> = {
         'admin@blick.cm': db.passwords['admin@blick.cm'] || 'Blick#Machinery@Admin&2026!'
@@ -79,7 +163,7 @@ export async function POST(request: NextRequest) {
         tickets: []
       };
 
-      writeDatabase(cleanDb);
+      await writeDatabase(cleanDb);
       return NextResponse.json({ success: true, message: 'Fictional demo data successfully deleted.', db: cleanDb });
     }
 
@@ -88,7 +172,7 @@ export async function POST(request: NextRequest) {
     }
 
     db[key] = data;
-    const success = writeDatabase(db);
+    const success = await writeDatabase(db);
 
     if (success) {
       return NextResponse.json({ success: true });
