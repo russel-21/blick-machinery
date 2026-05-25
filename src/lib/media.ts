@@ -105,7 +105,7 @@ export const mediaDb = {
   getItems: async (): Promise<MediaItem[]> => {
     if (typeof window === 'undefined') return DEFAULT_MEDIA;
     try {
-      const res = await fetch('/api/db?key=media', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=media&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.media || DEFAULT_MEDIA;
     } catch {

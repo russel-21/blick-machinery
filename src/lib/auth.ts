@@ -91,7 +91,7 @@ export const db = {
   getUsers: async (): Promise<User[]> => {
     if (typeof window === 'undefined') return DEFAULT_USERS;
     try {
-      const res = await fetch('/api/db?key=users', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=users&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.users || DEFAULT_USERS;
     } catch {
@@ -116,7 +116,7 @@ export const db = {
   getPayments: async (): Promise<InstallmentPayment[]> => {
     if (typeof window === 'undefined') return [];
     try {
-      const res = await fetch('/api/db?key=payments', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=payments&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.payments || [];
     } catch {
@@ -167,7 +167,7 @@ export const db = {
     const defaultPw = { 'admin@blick.cm': 'Blick#Machinery@Admin&2026!' };
     if (typeof window === 'undefined') return defaultPw;
     try {
-      const res = await fetch('/api/db?key=passwords', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=passwords&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.passwords || defaultPw;
     } catch {
@@ -192,7 +192,7 @@ export const db = {
   getSettings: async (): Promise<any> => {
     if (typeof window === 'undefined') return DEFAULT_SETTINGS;
     try {
-      const res = await fetch('/api/db?key=settings', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=settings&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.settings || DEFAULT_SETTINGS;
     } catch {
@@ -217,7 +217,7 @@ export const db = {
   getQuotes: async (): Promise<Quote[]> => {
     if (typeof window === 'undefined') return [];
     try {
-      const res = await fetch('/api/db?key=quotes', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=quotes&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.quotes || [];
     } catch {
@@ -242,7 +242,7 @@ export const db = {
   getTickets: async (): Promise<SAVTicket[]> => {
     if (typeof window === 'undefined') return [];
     try {
-      const res = await fetch('/api/db?key=tickets', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=tickets&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.tickets || [];
     } catch {

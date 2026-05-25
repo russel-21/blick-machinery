@@ -119,7 +119,7 @@ export const productsDb = {
   getItems: async (): Promise<Product[]> => {
     if (typeof window === 'undefined') return DEFAULT_PRODUCTS;
     try {
-      const res = await fetch('/api/db?key=products', { cache: 'no-store' });
+      const res = await fetch(`/api/db?key=products&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       return data.products || DEFAULT_PRODUCTS;
     } catch {

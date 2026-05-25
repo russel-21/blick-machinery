@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/components/AuthProvider';
-import { User, UserRole } from '@/lib/auth';
+import { User, UserRole, db } from '@/lib/auth';
 import { useState, useEffect } from 'react';
 
 export default function UserRoleManagement() {
@@ -13,6 +13,18 @@ export default function UserRoleManagement() {
   const loadUsers = async () => {
     const list = await refreshUserList();
     setUserList(list);
+  };
+
+  const handleCleanFictional = async () => {
+    if (confirm("Voulez-vous vraiment réinitialiser les comptes et supprimer tous les utilisateurs fictifs ? (Votre compte Administrateur principal sera conservé)")) {
+      const res = await db.cleanFictionalData();
+      if (res && res.success) {
+        alert("Comptes fictifs supprimés avec succès !");
+        await loadUsers();
+      } else {
+        alert("Erreur lors de la réinitialisation.");
+      }
+    }
   };
 
   useEffect(() => {
@@ -136,8 +148,37 @@ export default function UserRoleManagement() {
             />
             <span style={{ position: 'absolute', left: '12px', top: '13px', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }}>🔎</span>
           </div>
-          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
-            {filteredUsers.length} utilisateur(s) trouvé(s)
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexShrink: 0 }}>
+            <button
+              onClick={handleCleanFictional}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: '#f87171',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                padding: '0.65rem 1.25rem',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+              }}
+            >
+              🧹 Nettoyer comptes fictifs
+            </button>
+            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
+              {filteredUsers.length} utilisateur(s) trouvé(s)
+            </div>
           </div>
         </div>
       </div>
