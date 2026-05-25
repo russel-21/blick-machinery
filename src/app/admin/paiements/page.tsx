@@ -305,21 +305,19 @@ export default function InstallmentManagement() {
                         <h4 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: '0.75rem', letterSpacing: '0.04em' }}>
                           📅 ÉCHÉANCIER DE PAIEMENT
                         </h4>
-                        
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           {agr.installments.map((inst, index) => (
-                            <div key={inst.id} style={{
-                              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            <div key={inst.id} className="installment-row" style={{
                               padding: '0.6rem 0.85rem', borderRadius: '6px',
                               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)'
                             }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div className="installment-info">
                                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>#{index + 1}</span>
                                 <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{inst.amount.toLocaleString()} $</span>
                                 <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Échéance : {inst.dueDate}</span>
                               </div>
                               
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div className="installment-actions">
                                 {inst.status === 'paid' ? (
                                   <span style={{ fontSize: '0.75rem', color: '#4ade80', fontWeight: 700 }}>
                                     ✅ Payé le {inst.paidDate}
@@ -344,7 +342,6 @@ export default function InstallmentManagement() {
                                   </>
                                 )}
                               </div>
-
                             </div>
                           ))}
                         </div>
@@ -362,10 +359,44 @@ export default function InstallmentManagement() {
       </div>
 
       <style>{`
+        .installment-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+        }
+        .installment-info {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+        .installment-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex-shrink: 0;
+        }
         @media (max-width: 990px) {
           .payment-grid {
             grid-template-columns: 1fr !important;
             gap: 2rem !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .installment-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+            padding: 1rem !important;
+          }
+          .installment-info {
+            gap: 0.5rem !important;
+          }
+          .installment-actions {
+            justify-content: space-between !important;
+            border-top: 1px solid rgba(255,255,255,0.05) !important;
+            padding-top: 0.5rem !important;
           }
         }
       `}</style>

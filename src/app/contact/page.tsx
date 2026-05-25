@@ -81,7 +81,7 @@ export default function ContactPage() {
       </section>
 
       <section style={{ padding: '5rem 1.5rem', background: '#0d1b2a' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '4rem', alignItems: 'start' }}>
+        <div className="contact-main-grid" style={{ maxWidth: '1100px', margin: '0 auto', alignItems: 'start' }}>
 
           {/* Contact info */}
           <div>
@@ -173,7 +173,7 @@ export default function ContactPage() {
             )}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="contact-form-grid" style={{ gap: '1rem' }}>
                 <div>
                   <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>NOM COMPLET *</label>
                   <input
@@ -258,11 +258,21 @@ export default function ContactPage() {
         </div>
 
         <style>{`
+          .contact-main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 4rem;
+          }
+          .contact-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+          }
           @media (max-width: 768px) {
-            section > div[style*="grid-template-columns: 1fr 1.5fr"] {
+            .contact-main-grid {
               grid-template-columns: 1fr !important;
+              gap: 2.5rem !important;
             }
-            div[style*="grid-template-columns: 1fr 1fr"] {
+            .contact-form-grid {
               grid-template-columns: 1fr !important;
             }
           }

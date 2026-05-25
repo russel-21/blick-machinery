@@ -89,10 +89,9 @@ export default function LoginPage() {
         pointerEvents: 'none'
       }} />
 
-      <div className="glass-card" style={{
+      <div className="glass-card auth-card" style={{
         width: '100%',
         maxWidth: '450px',
-        padding: '2.5rem',
         border: '1px solid rgba(245,166,35,0.2)',
         borderRadius: '16px',
         position: 'relative',
@@ -270,6 +269,16 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
+      <style>{`
+        .auth-card {
+          padding: 2.5rem;
+        }
+        @media (max-width: 480px) {
+          .auth-card {
+            padding: 1.5rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -253,10 +253,9 @@ export default function AdminMediaManagement() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }}>
             {items.map((item) => (
-              <div key={item.id} style={{
-                display: 'flex', gap: '1rem', padding: '1rem', borderRadius: '8px',
+              <div key={item.id} className="admin-media-card" style={{
+                padding: '1rem', borderRadius: '8px',
                 background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-                alignItems: 'center'
               }}>
                 {/* Media Preview */}
                 <div style={{
@@ -316,10 +315,30 @@ export default function AdminMediaManagement() {
       </div>
 
       <style>{`
+        .admin-media-card {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 1rem;
+        }
         @media (max-width: 990px) {
           .media-grid {
             grid-template-columns: 1fr !important;
             gap: 2rem !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .admin-media-card {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1rem !important;
+          }
+          .admin-media-card > button {
+            width: 100% !important;
+          }
+          .admin-media-card > div:first-child {
+            width: 100% !important;
+            height: 150px !important;
           }
         }
       `}</style>

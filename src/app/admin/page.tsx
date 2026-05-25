@@ -126,7 +126,7 @@ export default function AdminDashboard() {
           </h2>
           
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                   <th style={{ padding: '0.75rem 0.5rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: 700 }}>UTILISATEUR</th>

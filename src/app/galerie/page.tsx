@@ -134,7 +134,7 @@ export default function GaleriePage() {
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
               gap: '1.75rem',
             }}>
               {filteredItems.map((item, i) => (
@@ -243,7 +243,7 @@ export default function GaleriePage() {
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9999,
           background: 'rgba(10,22,40,0.85)', backdropFilter: 'blur(10px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex',
           padding: '1.5rem', overflowY: 'auto'
         }}>
           {/* Modal Card */}
@@ -252,7 +252,7 @@ export default function GaleriePage() {
             border: '1px solid rgba(245,166,35,0.25)', background: '#0d1b2a',
             display: 'grid', gridTemplateColumns: '1.2fr 1fr',
             boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
-            position: 'relative'
+            position: 'relative', margin: 'auto'
           }}>
             
             {/* Close Button */}

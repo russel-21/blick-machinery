@@ -132,7 +132,7 @@ export default function UserRoleManagement() {
 
       {/* Users Table */}
       <div className="glass-card" style={{ padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '850px' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               <th style={{ padding: '1rem 0.75rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem', fontWeight: 700 }}>UTILISATEUR</th>

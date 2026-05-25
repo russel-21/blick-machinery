@@ -56,7 +56,7 @@ export default function Navbar() {
             <Image src="/logo.jpg" alt="Blick Machinery Logo" width={52} height={52} style={{ objectFit: 'contain' }} />
           </div>
           <div>
-            <div style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.1rem', color: 'white', lineHeight: 1.1 }}>BLICK MACHINERY</div>
+            <div className="brand-title" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, color: 'white', lineHeight: 1.1 }}>BLICK MACHINERY</div>
             <div style={{ fontSize: '0.65rem', color: '#f5a623', fontWeight: 500, letterSpacing: '0.08em' }}>CAMEROON SARL</div>
           </div>
         </Link>
@@ -118,7 +118,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          <Link href="/contact" style={{ textDecoration: 'none' }}>
+          <Link href="/contact" style={{ textDecoration: 'none' }} className="cta-button-header">
             <button className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.6rem 1.4rem' }}>
               Demander un Devis
             </button>
@@ -128,8 +128,8 @@ export default function Navbar() {
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
-              display: 'none', background: 'none', border: 'none', cursor: 'pointer',
-              color: 'white', padding: '0.25rem',
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'white', padding: '0.25rem', display: 'none',
             }}
             className="hamburger"
           >
@@ -214,9 +214,18 @@ export default function Navbar() {
       )}
 
       <style>{`
+        .brand-title {
+          font-size: 1.1rem;
+        }
         @media (max-width: 900px) {
           .desktop-nav { display: none !important; }
           .hamburger { display: block !important; }
+          .cta-button-header { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .brand-title {
+            font-size: 0.9rem;
+          }
         }
       `}</style>
     </nav>

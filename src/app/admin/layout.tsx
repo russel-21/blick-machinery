@@ -19,10 +19,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close sidebar drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (mounted && !loading && !user) {
@@ -79,16 +85,97 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', background: '#0a1628',
-      color: 'white', fontFamily: "'Inter', sans-serif"
-    }}>
+    <div 
+      style={{
+        minHeight: '100vh', display: 'flex', flexDirection: 'row', background: '#0a1628',
+        color: 'white', fontFamily: "'Inter', sans-serif"
+      }}
+      className="admin-container"
+    >
+      {/* Backdrop for mobile sidebar drawer */}
+      {mobileMenuOpen && (
+        <div 
+          className="admin-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10,22,40,0.6)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+          }}
+        />
+      )}
+
+      {/* Mobile Top Header */}
+      <header 
+        className="admin-mobile-header"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '64px',
+          background: '#0d1b2a',
+          borderBottom: '1px solid rgba(245,166,35,0.15)',
+          display: 'none',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          zIndex: 998,
+        }}
+      >
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden',
+            background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(245,166,35,0.3)', flexShrink: 0
+          }}>
+            <Image src="/logo.jpg" alt="Logo" width={32} height={32} style={{ objectFit: 'contain' }} />
+          </div>
+          <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>BLICK GESTION</span>
+        </div>
+
+        <div style={{ width: '40px' }} /> {/* Spacer to center the logo */}
+      </header>
+
       {/* Sidebar */}
-      <aside style={{
-        width: '280px', flexShrink: 0, background: '#0d1b2a',
-        borderRight: '1px solid rgba(245,166,35,0.15)', display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 0, height: '100vh'
-      }}>
+      <aside 
+        className="admin-sidebar"
+        style={{
+          width: '280px',
+          flexShrink: 0,
+          background: '#0d1b2a',
+          borderRight: '1px solid rgba(245,166,35,0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease-in-out',
+        }}
+      >
         {/* Sidebar Header with Logo */}
         <div style={{
           padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -161,9 +248,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', height: '100vh' }}>
+      <main 
+        className="admin-main-content"
+        style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', height: '100vh' }}
+      >
         {children}
       </main>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .admin-container {
+            flex-direction: row !important;
+          }
+          .admin-mobile-header {
+            display: none !important;
+          }
+          .admin-sidebar {
+            transform: none !important;
+            position: sticky !important;
+            display: flex !important;
+          }
+          .admin-main-content {
+            padding: 2.5rem !important;
+            margin-top: 0 !important;
+            height: 100vh !important;
+          }
+          .admin-backdrop {
+            display: none !important;
+          }
+        }
+        @media (max-width: 1023px) {
+          .admin-container {
+            flex-direction: column !important;
+          }
+          .admin-mobile-header {
+            display: flex !important;
+          }
+          .admin-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            z-index: 10000 !important;
+            height: 100vh !important;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.5) !important;
+          }
+          .admin-main-content {
+            padding: 1.25rem !important;
+            margin-top: 64px !important;
+            height: calc(100vh - 64px) !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

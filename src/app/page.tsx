@@ -177,7 +177,7 @@ export default function HomePage() {
         background: 'linear-gradient(135deg, #f5a623 0%, #d4891a 100%)',
         padding: '3rem 1.5rem',
       }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '2rem', textAlign: 'center' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '2rem', textAlign: 'center' }}>
           {stats.map((stat, i) => (
             <div key={i}>
               <div style={{
@@ -198,7 +198,7 @@ export default function HomePage() {
 
       {/* ===== ABOUT SECTION ===== */}
       <section style={{ padding: '6rem 1.5rem', background: '#0d1b2a' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+        <div className="grid-responsive-2" style={{ maxWidth: '1100px', margin: '0 auto', alignItems: 'center' }}>
           <div>
             <div style={{
               background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.15)',
@@ -224,7 +224,7 @@ export default function HomePage() {
               <strong style={{ color: '#f5a623' }}>Blick Machinery Cameroon SARL</strong> est la représentation officielle au Cameroun de la société chinoise <strong style={{ color: 'white' }}>Blick Refractory Technology</strong>, spécialisée dans la fabrication de machines industrielles de haute performance.
             </p>
             <p style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, marginBottom: '2rem' }}>
-              Basés à l&apos;adresse suivante : <strong style={{ color: 'white' }}>{settings.locationAdmin}</strong>, nous livrons nos machines partout en Afrique et collaborons avec des partenaires logistiques et techniques dans la majorité des pays de l&apos;Afrique de l&apos;Ouest.
+              Basés à l&apos;adresse suivante : <strong style={{ color: 'white' }}>{settings.locationAdmin}</strong>, nous livrons nos machines partout en Afrique et collaborons avec des partenaires logistiques et techniques dans la majority des pays de l&apos;Afrique de l&apos;Ouest.
             </p>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <Link href="/a-propos" style={{ textDecoration: 'none' }}>
@@ -238,9 +238,15 @@ export default function HomePage() {
         </div>
 
         <style>{`
+          .grid-responsive-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+          }
           @media (max-width: 768px) {
-            section > div[style*="grid-template-columns: 1fr 1fr"] {
+            .grid-responsive-2 {
               grid-template-columns: 1fr !important;
+              gap: 2rem !important;
             }
           }
         `}</style>
@@ -304,7 +310,7 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
             {features.map((feat, i) => (
               <div key={i} className="glass-card" style={{ padding: '2rem', display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
                 <div style={{

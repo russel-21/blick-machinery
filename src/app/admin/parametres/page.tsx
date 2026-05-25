@@ -92,7 +92,7 @@ export default function AdminSettings() {
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="glass-card" style={{ padding: '2.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <form onSubmit={handleSubmit} className="glass-card responsive-form-card" style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         {/* Section 1: Qui Sommes Nous */}
         <div>
@@ -319,7 +319,13 @@ export default function AdminSettings() {
       </form>
 
       <style>{`
+        .responsive-form-card {
+          padding: 2.5rem;
+        }
         @media (max-width: 768px) {
+          .responsive-form-card {
+            padding: 1.25rem !important;
+          }
           .form-grid {
             grid-template-columns: 1fr !important;
             gap: 1.1rem !important;

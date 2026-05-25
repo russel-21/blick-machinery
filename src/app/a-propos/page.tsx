@@ -55,7 +55,7 @@ export default function AProposPage() {
 
       {/* Mission */}
       <section style={{ padding: '6rem 1.5rem', background: '#0d1b2a' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+        <div className="grid-responsive-2" style={{ maxWidth: '1100px', margin: '0 auto', alignItems: 'center' }}>
           <div style={{
             background: 'rgba(245,166,35,0.06)', border: '1px solid rgba(245,166,35,0.15)',
             borderRadius: '20px', padding: '3rem', textAlign: 'center',
@@ -80,8 +80,16 @@ export default function AProposPage() {
           </div>
         </div>
         <style>{`
+          .grid-responsive-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+          }
           @media (max-width: 768px) {
-            section > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            .grid-responsive-2 {
+              grid-template-columns: 1fr !important;
+              gap: 2rem !important;
+            }
           }
         `}</style>
       </section>
