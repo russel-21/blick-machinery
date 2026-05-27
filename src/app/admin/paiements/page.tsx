@@ -299,7 +299,8 @@ export default function InstallmentManagement() {
 
   return (
     <div>
-      {/* Header */}
+      <div className="no-print">
+        {/* Header */}
       <div style={{ marginBottom: '2.5rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0, fontFamily: "'Outfit', sans-serif" }}>
           Ventes & <span className="text-gold-gradient">Financement B2B</span>
@@ -739,15 +740,16 @@ export default function InstallmentManagement() {
         </div>
 
       </div>
+      </div>
 
       {/* ================= INVOICE GENERATION MODAL ================= */}
       {activeInvoice && (
-        <div className="no-print" style={{
+        <div className="print-modal-container" style={{
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'rgba(10,22,40,0.8)', backdropFilter: 'blur(10px)',
           display: 'flex', padding: '1.5rem', overflowY: 'auto'
         }}>
-          <div className="glass-card" style={{
+          <div className="glass-card print-modal-content" style={{
             width: '100%', maxWidth: '850px', background: '#0d1b2a', border: '1px solid rgba(245,166,35,0.25)',
             borderRadius: '20px', margin: 'auto', padding: '2.5rem', position: 'relative',
             boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
@@ -960,16 +962,36 @@ export default function InstallmentManagement() {
             background: white !important;
             color: black !important;
           }
-          /* Hide everything except the printable modal invoice */
-          body > * {
-            display: none !important;
-          }
           html, body, #__next, main {
             background: white !important;
             color: black !important;
             padding: 0 !important;
             margin: 0 !important;
             height: auto !important;
+          }
+          .no-print, header, footer, nav, aside {
+            display: none !important;
+          }
+          /* Style the modal container to take full print page */
+          .print-modal-container {
+            position: absolute !important;
+            inset: 0 !important;
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            display: block !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
+          .print-modal-content {
+            background: white !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
           }
           /* Render ONLY the printable-invoice block */
           .printable-invoice {
@@ -987,9 +1009,6 @@ export default function InstallmentManagement() {
             color: black !important;
             border-color: #ccc !important;
             background: transparent !important;
-          }
-          .no-print {
-            display: none !important;
           }
         }
       `}</style>
