@@ -38,7 +38,7 @@
   },
   "payments": [
     {
-      "id": "pay_4s1o9aoib",
+      "id": "pay_4gpdvcuov",
       "machineId": "mac_gran_1",
       "machineName": "Granuleuse Industrielle 500kg/h (Amadou Diallo)",
       "totalAmount": 40000,
@@ -50,25 +50,63 @@
       "depositStatus": "pending",
       "installments": [
         {
-          "id": "inst_6gpxc2ako",
+          "id": "inst_p5z7xbkb5",
           "amount": 9000,
           "dueDate": "2026-06-27",
           "status": "pending"
         },
         {
-          "id": "inst_a1cfotazm",
+          "id": "inst_3rga38gao",
           "amount": 9000,
           "dueDate": "2026-07-27",
           "status": "pending"
         },
         {
-          "id": "inst_h49bttv6b",
+          "id": "inst_vk1jha733",
           "amount": 9000,
           "dueDate": "2026-08-27",
           "status": "pending"
         },
         {
-          "id": "inst_iyw7r08q3",
+          "id": "inst_on7f7zvjy",
+          "amount": 9000,
+          "dueDate": "2026-09-27",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "pay_ecu7rvqsg",
+      "machineId": "mac_gran_1",
+      "machineName": "Granuleuse Industrielle 500kg/h (Amadou Diallo)",
+      "totalAmount": 40000,
+      "paidAmount": 0,
+      "negotiatorName": "Admin Blick",
+      "status": "pending",
+      "clientId": "usr_client",
+      "depositAmount": 4000,
+      "depositStatus": "pending",
+      "installments": [
+        {
+          "id": "inst_fdr3c0zxl",
+          "amount": 9000,
+          "dueDate": "2026-06-27",
+          "status": "pending"
+        },
+        {
+          "id": "inst_igwsj31g7",
+          "amount": 9000,
+          "dueDate": "2026-07-27",
+          "status": "pending"
+        },
+        {
+          "id": "inst_84qsw2qen",
+          "amount": 9000,
+          "dueDate": "2026-08-27",
+          "status": "pending"
+        },
+        {
+          "id": "inst_yiteieoqm",
           "amount": 9000,
           "dueDate": "2026-09-27",
           "status": "pending"
@@ -227,7 +265,7 @@
       "machine": "mac_gran_1",
       "machineName": "Granuleuse Industrielle 500kg/h",
       "message": "Besoin de commander une granuleuse industrielle de 500kg/h pour livraison au port de Dakar. Budget approx 45000$.",
-      "status": "pending",
+      "status": "approved",
       "createdAt": "2026-05-15T09:30:00Z"
     }
   ],
