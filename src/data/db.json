@@ -38,6 +38,44 @@
   },
   "payments": [
     {
+      "id": "pay_ecu7rvqsg",
+      "machineId": "mac_gran_1",
+      "machineName": "Granuleuse Industrielle 500kg/h (Amadou Diallo)",
+      "totalAmount": 40000,
+      "paidAmount": 0,
+      "negotiatorName": "Admin Blick",
+      "status": "pending",
+      "clientId": "usr_client",
+      "depositAmount": 4000,
+      "depositStatus": "pending",
+      "installments": [
+        {
+          "id": "inst_fdr3c0zxl",
+          "amount": 9000,
+          "dueDate": "2026-06-27",
+          "status": "pending"
+        },
+        {
+          "id": "inst_igwsj31g7",
+          "amount": 9000,
+          "dueDate": "2026-07-27",
+          "status": "pending"
+        },
+        {
+          "id": "inst_84qsw2qen",
+          "amount": 9000,
+          "dueDate": "2026-08-27",
+          "status": "pending"
+        },
+        {
+          "id": "inst_yiteieoqm",
+          "amount": 9000,
+          "dueDate": "2026-09-27",
+          "status": "pending"
+        }
+      ]
+    },
+    {
       "id": "pay_1",
       "machineId": "mac_gran_1",
       "machineName": "Granuleuse Industrielle 500kg/h (Amadou Diallo)",
