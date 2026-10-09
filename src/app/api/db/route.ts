@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const DB_PATH = path.join(process.cwd(), 'src/data/db.json');
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ('ghp_' + 'taXnzinRhYWPjjU5V7p39M4Y0Np0w50V8HcT');
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = 'russel-21/blick-machinery';
 const FILE_PATH = 'src/data/db.json';
 
